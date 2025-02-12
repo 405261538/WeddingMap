@@ -5,12 +5,195 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WeddingMap</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
+        svg {
+            border: 1px solid #ccc;
+        }
+        image {
+            transition: opacity 0.5s ease-in-out;
+        }
     </style>
 </head>
 <body>
-	<p>testConnection</p>
-    <script>
-    </script>
+    <p1>你的座位資訊</p1>
+    <p id="seat-info"></p>
+    <!--
+    <svg id="map" width="100%" height="100%" viewBox="0 0 1000 1000" style="border:1px solid black;">
+        //門口
+        <circle id="entrance" cx="50" cy="50" r="2" fill="blue"></circle>
+    
+        //座位
+        <circle class="seat" id="1" cx="300" cy="100" r="2" fill="red"></circle>
+        <circle class="seat" id="2" cx="400" cy="200" r="2" fill="red"></circle>
+        
+        //動線
+        <polyline id="path-line" points="" stroke="green" stroke-width="3" fill="none"></polyline>
+    </svg>
+    -->
+    <svg id="svgCanvas" width="500" height="300" viewBox="0 0 500 300">
+        <path id="route" fill="transparent" stroke="black" stroke-width="2" d="M50 250 L150 250 L150 150 L250 150 L250 50" visibility="hidden" />
+
+        <!-- Left Footprint -->
+        <image id="leftFoot" href="img/left-footprint.png" x="0" y="0" width="20" height="20" visibility="hidden" opacity="0"/>
+        
+        <!-- Right Footprint -->
+        <image id="rightFoot" href="img/right-footprint.png" x="0" y="0" width="20" height="20" visibility="hidden" opacity="0"/>
+    </svg>
+    
+<script>
+    $(function(){
+        let seatId = getSeatIdFromURL();
+        if (seatId) {
+            document.getElementById("seat-info").innerText = `你的座位號碼是：${seatId}`;
+            // 這裡可以調用 onScanQRCode(seatId) 來顯示動線
+        } else {
+            document.getElementById("seat-info").innerText = "無效的座位";
+        }
+
+        // 測試用：模擬掃描到 seat-1
+        // setTimeout(() => {
+        //     onScanQRCode(seatId);
+        // }, 2000);
+        // 設定間隔，定期更新腳印位置
+        setInterval(updateFootprints, intervalTime);
+    });
+
+    // 獲取路徑元素
+    const route = document.getElementById('route');
+    const leftFoot = document.getElementById('leftFoot');
+    const rightFoot = document.getElementById('rightFoot');
+
+    // 設定路徑點
+    const pathLength = route.getTotalLength();
+
+    // 設定腳印動畫
+    let currentPosition = 0;
+    let isLeftFoot = true;
+    // 設定偏移量，這個可以根據需要調整
+    const footOffset = 10;
+
+    // 設定動畫時間間隔
+    const intervalTime = 800; // 每200ms更新位置
+
+    // 設置淡入淡出的函數
+    function fadeInOut(footprint, isVisible) {
+        if (isVisible) {
+            footprint.setAttribute('opacity', 1);  // 淡入
+            footprint.setAttribute('visibility', 'visible');
+        } else {
+            footprint.setAttribute('opacity', 0);  // 淡出
+            footprint.setAttribute('visibility', 'hidden');
+        }
+    }
+
+    // 更新腳印位置的函數
+    function updateFootprints() {
+        // 根據當前位置獲取路徑上的座標
+        const point = route.getPointAtLength(currentPosition);
+
+        // 計算切線的角度
+        const tangent = route.getPointAtLength(currentPosition + 1); // 取下一個點來計算切線
+        const angle = Math.atan2(tangent.y - point.y, tangent.x - point.x); // 計算切線角度
+
+        // 判斷路徑段是水平還是垂直
+        let leftX, leftY, rightX, rightY;
+
+        // 如果是水平線段（x值改變，y值不變）
+        if (Math.abs(tangent.x - point.x) > Math.abs(tangent.y - point.y)) {
+            // 水平從左到右
+            if (tangent.x > point.x) {
+                leftX = point.x - 20;
+                leftY = point.y - footOffset - 10; // 左腳在上方
+                rightX = point.x ;
+                rightY = point.y + footOffset - 30; // 右腳在下方
+                // 旋轉90度
+                leftFoot.setAttribute('transform', 'rotate(90, ' + point.x + ', ' + point.y + ')');
+                rightFoot.setAttribute('transform', 'rotate(90, ' + point.x + ', ' + point.y + ')');
+            }
+            // 水平從右到左
+            else {
+                leftX = point.x;
+                leftY = point.y + footOffset + 5; // 左腳在下方
+                rightX = point.x;
+                rightY = point.y - footOffset + 5; // 右腳在上方
+                // 旋轉90度
+                leftFoot.setAttribute('transform', 'rotate(-90, ' + point.x + ', ' + point.y + ')');
+                rightFoot.setAttribute('transform', 'rotate(-90, ' + point.x + ', ' + point.y + ')');
+            }
+        }
+        // 如果是垂直線段（y值改變，x值不變）
+        else {
+            // 垂直從上到下
+            if (tangent.y > point.y) {
+                leftX = point.x + footOffset; // 左腳在右側
+                leftY = point.y;
+                rightX = point.x - footOffset; // 右腳在左側
+                rightY = point.y;
+                // 旋轉90度
+                leftFoot.setAttribute('transform', 'rotate(0, ' + point.x + ', ' + point.y + ')');
+                rightFoot.setAttribute('transform', 'rotate(0, ' + point.x + ', ' + point.y + ')');
+            }
+            // 垂直從下到上
+            else {
+                leftX = point.x - footOffset - 10; // 左腳在左側
+                leftY = point.y - 20;
+                rightX = point.x + footOffset - 10; // 右腳在右側
+                rightY = point.y - 20;
+                // 旋轉90度
+                leftFoot.setAttribute('transform', 'rotate(0, ' + point.x + ', ' + point.y + ')');
+                rightFoot.setAttribute('transform', 'rotate(0, ' + point.x + ', ' + point.y + ')');
+            }
+        }
+
+        // 更新左腳印或右腳印位置
+        if (isLeftFoot) {
+            leftFoot.setAttribute('x', leftX);
+            leftFoot.setAttribute('y', leftY);
+            fadeInOut(leftFoot, true);  // 顯示左腳印，並淡入
+            fadeInOut(rightFoot, false); // 隱藏右腳印，並淡出
+        } 
+        else {
+            rightFoot.setAttribute('x', rightX);
+            rightFoot.setAttribute('y', rightY);
+            fadeInOut(rightFoot, true); // 顯示右腳印，並淡入
+            fadeInOut(leftFoot, false);  // 隱藏左腳印，並淡出
+        }
+        // 交替顯示
+        isLeftFoot = !isLeftFoot;
+
+        // 更新位置
+        currentPosition += 15;  // 每次移動10個單位
+        if (currentPosition > pathLength) {
+            currentPosition = 0;  // 重置位置
+        }
+    }
+
+    // 取得 URL 參數
+    function getSeatIdFromURL() {
+        let params = new URLSearchParams(window.location.search);
+        return params.get("id"); // 取得 ?id=xxx 的值
+    }
+
+    // 模擬掃描 QR Code，實際應用可以用 qrcode.js 或後端 API 讀取
+    function onScanQRCode(seatId) {
+        let entrance = { x: 50, y: 50 }; // 門口座標
+        let seat = document.getElementById(seatId);
+
+        if (!seat) {
+            alert("座位不存在！");
+            return;
+        }
+
+        // 取得座位座標
+        let seatX = seat.getAttribute("cx");
+        let seatY = seat.getAttribute("cy");
+
+        // 繪製路徑
+        let pathLine = document.getElementById("path-line");
+        pathLine.setAttribute("points", `${entrance.x},${entrance.y} ${seatX},${seatY}`);
+    }
+</script>
+
 </body>
 </html>

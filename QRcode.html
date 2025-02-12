@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WeddingMap</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+    </style>
+</head>
+<body>
+    <select id="CustName" onchange="proQRcode()">
+        <option value="1">柯XX</option>
+        <option value="2">蔡XX</option>
+        <option value="3">許XX</option>
+        <option value="4">顏XX</option>
+    </select>
+    <div id="qrcode"></div>
+<script>
+
+    function proQRcode(){
+        let Id = $('#CustName').val(); 
+        let url = `https://405261538.github.io/WeddingMap/map.html?id=${Id}`;
+
+        $('#qrcode').html('');
+        new QRCode(document.getElementById("qrcode"), url);
+    }
+
+</script>
+
+</body>
+</html>
