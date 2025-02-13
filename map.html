@@ -7,29 +7,49 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            /* overflow: hidden; */
+        }
+
         image {
             transition: opacity 0.5s ease-in-out;
         }
+
         .fullscreen-background {
             background-image: url('img/background.png');
-            background-size: cover;
-            background-position: center;
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            transform: scale(1); /* 微調放大以去除白邊 */
+            transition: transform 0.5s ease-in-out; /* 讓旋轉有過渡效果 */
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+        }
+        @media (max-width: 430px) {
+            .fullscreen-background {
+                transform: translateX(100vw) rotate(90deg) ;
+                transform-origin: top left; /* 旋轉基準點設為左上角 */
+                width: 100vh; /* 交換寬高，讓 SVG 填滿 */
+                height: 100vw;
+                background-size: 100% 100%;
+            }
         }
     </style>
 </head>
 <body>
     <!-- <p1>你的座位資訊</p1>
     <p id="seat-info"></p> -->
-    <svg id="svgCanvas" width="100%" height="100%" viewBox="0 0 1000 600" class="fullscreen-background">
-        <path id="route" fill="transparent" stroke="black" stroke-width="2" d="M-100 290 L220 270 L220 150 L550 150 L550 600" visibility="hidden" />
+    <svg id="svgCanvas" width="100%" height="100%" viewBox="0 0 800 396" class="fullscreen-background">
+        <path id="route" fill="transparent" stroke="black" stroke-width="2" 
+            d="M0 190 L210 170 L240 50 L450 65 L420 600" visibility="" />
         <!-- <path id="route" fill="transparent" stroke="black" stroke-width="2" d="M320 270 L-100 290 L-100 100 L-100 30 L200 30 L200 300" visibility="" /> -->
     </svg>
+    <!-- <div id="test"></div> -->
 <script>
     $(function(){
         // let seatId = getSeatIdFromURL();
@@ -54,22 +74,22 @@
     // 設定腳印動畫
     let currentPosition = 0;
     let isLeftFoot = true;
-    const footOffset = 8; // 腳印與路徑的偏移量
+    const footOffset = 4; // 腳印與路徑的偏移量
     const intervalTime = 400; // 每800ms產生一個腳印
-    const disappearTime = 4300; // 腳印多久後開始淡出（毫秒）
+    const disappearTime = 2300; // 腳印多久後開始淡出（毫秒）
 
     function createFootprint(x, y, isLeft, rotation) {
         let footprint = document.createElementNS("http://www.w3.org/2000/svg", "image");
         footprint.setAttribute("href", isLeft ? "img/left-footprint.png" : "img/right-footprint.png");
         footprint.setAttribute("x", x);
         footprint.setAttribute("y", y);
-        footprint.setAttribute("width", 20);
-        footprint.setAttribute("height", 20);
+        footprint.setAttribute("width", 10);
+        footprint.setAttribute("height", 10);
         footprint.setAttribute("opacity", 1);
         footprint.setAttribute("class", "footprint");
 
         // 設置旋轉角度
-        footprint.setAttribute("transform", `rotate(${rotation}, ${x + 15}, ${y + 15})`);
+        footprint.setAttribute("transform", `rotate(${rotation}, ${x + 8}, ${y + 8})`);
 
         svg.appendChild(footprint);
 
@@ -100,12 +120,12 @@
         }
         
         const point = route.getPointAtLength(currentPosition);
-        const nextPoint = route.getPointAtLength(currentPosition + 15); // 預測下一步
+        const nextPoint = route.getPointAtLength(currentPosition + 10); // 預測下一步
         
         let angle = Math.atan2(nextPoint.y - point.y, nextPoint.x - point.x) * (180 / Math.PI);
         
         // 偵測轉彎
-        const furtherPoint = route.getPointAtLength(currentPosition + 30);
+        const furtherPoint = route.getPointAtLength(currentPosition + 20);
         let nextAngle = Math.atan2(furtherPoint.y - nextPoint.y, furtherPoint.x - nextPoint.x) * (180 / Math.PI);
         
         let angleDifference = nextAngle - angle;
@@ -122,7 +142,7 @@
         let leftY = point.y - offsetY;
         let rightX = point.x + offsetX;
         let rightY = point.y + offsetY;
-        let deviation = angle >= 90 ? 20 : 10;
+        let deviation = angle >= 90 ? 12 : 5;
 
         if (isLeftFoot) {
             createFootprint(leftX - deviation, leftY - deviation, true, angle);
@@ -131,7 +151,7 @@
         }
         
         isLeftFoot = !isLeftFoot;
-        currentPosition += 15;
+        currentPosition += 10;
     }
 
 
