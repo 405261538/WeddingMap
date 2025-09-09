@@ -1,186 +1,368 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WeddingMap</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        * {
+        html, body {
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-        }
-
-        html, body {
-            width: 100%;
             height: 100%;
-            /* overflow: hidden; */
+            overflow: hidden; /* 避免 body 出現雙重捲軸 */
         }
 
         image {
             transition: opacity 0.5s ease-in-out;
         }
 
+
+
+        /* 場景容器：可上下滑動 */
+        .scene {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            /* 佔滿螢幕 */
+            overflow-y: hidden;
+            /* 允許上下捲動 */
+            overflow-x: hidden;
+            /* 水平方向固定 */
+            perspective: 1200px;
+            background: #000;
+            /* 若圖片比例不符，兩側補黑邊 */
+        }
+
+        /* 背景圖：等比縮放，寬度100% */
+        .background {
+            display: block;
+            width: 100%;
+            height: auto;
+            /* 高度依比例 */
+            transform: scale(2);
+            opacity: 0;
+            transition: transform 5s ease, opacity 5s ease;
+            z-index: 1;
+            position: relative;
+            /* 讓它隨容器滾動 */
+        }
+
+        /* 書本容器 */
+        .book {
+            position: fixed;
+            /* 固定在螢幕上，不跟著滾動 */
+            top: 50%;
+            left: 50%;
+            width: 100vw;
+            height: calc(100vw * 9 / 16);
+            /* 預設16:9比例 */
+            transform: translate(-50%, -50%);
+            z-index: 2;
+        }
+
+        /* 翻開的左右頁 */
+        .page {
+            position: absolute;
+            top: 0;
+            width: 50%;
+            height: 100%;
+            background-image: url('img/background.png');
+            background-size: cover;
+            background-repeat: no-repeat;
+            backface-visibility: hidden;
+        }
+
+        .left {
+            left: 0;
+            background-position: left;
+            transform-origin: left center;
+        }
+
+        .right {
+            right: 0;
+            background-position: right;
+            transform-origin: right center;
+        }
+
+        #Gryffindor {
+            position: absolute;
+            /* 需要讓top/left可以控制 */
+            top: 75px;
+            left: 93px;
+            width: 150px;
+            z-index: 1;
+        }
+
+        #Hufflepuff {
+            position: absolute;
+            /* 需要讓top/left可以控制 */
+            top: 75px;
+            left: 276px;
+            width: 150px;
+            z-index: 1;
+        }
+
+        #Ravenclaw {
+            position: absolute;
+            /* 需要讓top/left可以控制 */
+            top: 75px;
+            left: 553px;
+            width: 150px;
+            z-index: 1;
+        }
+
+        #Slytherin {
+            position: absolute;
+            /* 需要讓top/left可以控制 */
+            top: 75px;
+            left: 735px;
+            width: 150px;
+            z-index: 1;
+        }
+
         .fullscreen-background {
             background-image: url('img/background.png');
             position: absolute;
-            transition: transform 0.5s ease-in-out; /* 讓旋轉有過渡效果 */
+            transition: transform 0.5s ease-in-out;
+            /* 讓旋轉有過渡效果 */
             background-size: 100% 100%;
             background-repeat: no-repeat;
         }
+
         @media (max-width: 430px) {
             .fullscreen-background {
-                transform: translateX(100vw) rotate(90deg) ;
-                transform-origin: top left; /* 旋轉基準點設為左上角 */
-                width: 100vh; /* 交換寬高，讓 SVG 填滿 */
+                transform: translateX(100vw) rotate(90deg);
+                transform-origin: top left;
+                /* 旋轉基準點設為左上角 */
+                width: 100vh;
+                /* 交換寬高，讓 SVG 填滿 */
                 height: 100vw;
                 background-size: 100% 100%;
             }
         }
     </style>
 </head>
+
 <body>
-    <!-- <p1>你的座位資訊</p1>
-    <p id="seat-info"></p> -->
-    <svg id="svgCanvas" width="100%" height="100%" viewBox="0 0 800 396" class="fullscreen-background">
+    <div class="scene">
+        <div class="book">
+            <div class="page left"></div>
+            <div class="page right"></div>
+        </div>
+        <img class="background" src="img/seating_chart.jpg" alt="background">
+        <img id="Gryffindor" src="img/Gryffindor.png" alt="Gryffindor">
+        <img id="Hufflepuff" src="img/Hufflepuff.png" alt="Hufflepuff">
+        <img id="Ravenclaw" src="img/Ravenclaw.png" alt="Ravenclaw">
+        <img id="Slytherin" src="img/Slytherin.png" alt="Slytherin">
+        <svg id="svgCanvas" width="100%" height="100%" viewBox="0 0 800 396" class="fullscreen-background">
         <path id="route" fill="transparent" stroke="black" stroke-width="2" 
             d="M0 190 L210 170 L240 50 L450 65 L420 600" visibility="hidden" />
         <!-- <path id="route" fill="transparent" stroke="black" stroke-width="2" d="M320 270 L-100 290 L-100 100 L-100 30 L200 30 L200 300" visibility="" /> -->
-    </svg>
+        </svg>
+    </div>
+    <!-- <p1>你的座位資訊</p1>
+    <p id="seat-info"></p> -->
+    
+    
+   
     <!-- <div id="test"></div> -->
-<script>
-    $(function(){
-        // let seatId = getSeatIdFromURL();
-        // if (seatId) {
-        //     document.getElementById("seat-info").innerText = `你的座位號碼是：${seatId}`;
-        //     // 這裡可以調用 onScanQRCode(seatId) 來顯示動線
-        // } else {
-        //     document.getElementById("seat-info").innerText = "無效的座位";
-        // }
+    <script>
+        $(function () {
+            // let seatId = getSeatIdFromURL();
+            // if (seatId) {
+            //     document.getElementById("seat-info").innerText = `你的座位號碼是：${seatId}`;
+            //     // 這裡可以調用 onScanQRCode(seatId) 來顯示動線
+            // } else {
+            //     document.getElementById("seat-info").innerText = "無效的座位";
+            // }
 
-        // 測試用：模擬掃描到 seat-1
-        // setTimeout(() => {
-        //     onScanQRCode(seatId);
-        // }, 2000);
-        // 設定間隔，定期更新腳印位置
-        setInterval(updateFootprints, intervalTime);
-    });
+            // 測試用：模擬掃描到 seat-1
+            // setTimeout(() => {
+            //     onScanQRCode(seatId);
+            // }, 2000);
+            // 設定間隔，定期更新腳印位置
+            setInterval(updateFootprints, intervalTime);
+            var colleges = ["Gryffindor", "Hufflepuff", "Ravenclaw", "Slytherin"];
+            var baseTop = {
+                "Gryffindor": 75,
+                "Hufflepuff": 75,
+                "Ravenclaw": 75,
+                "Slytherin": 75
+            };
 
-    // 設定路徑點
-    const route = document.getElementById('route');
-    const svg = document.getElementById('svgCanvas');
-    // 設定腳印動畫
-    let currentPosition = 0;
-    let isLeftFoot = true;
-    const footOffset = 4; // 腳印與路徑的偏移量
-    const intervalTime = 400; // 每800ms產生一個腳印
-    const disappearTime = 2300; // 腳印多久後開始淡出（毫秒）
+            function floatElement(id) {
+                var newTop = baseTop[id] + (Math.random() * 20 - 10); // 上下隨機漂浮 ±10px
+                $('#' + id).animate({ top: newTop }, 2000, function () {
+                    floatElement(id); // 動畫完成後繼續漂浮
+                });
+            }
 
-    function createFootprint(x, y, isLeft, rotation) {
-        let footprint = document.createElementNS("http://www.w3.org/2000/svg", "image");
-        footprint.setAttribute("href", isLeft ? "img/left-footprint.png" : "img/right-footprint.png");
-        footprint.setAttribute("x", x);
-        footprint.setAttribute("y", y);
-        footprint.setAttribute("width", 10);
-        footprint.setAttribute("height", 10);
-        footprint.setAttribute("opacity", 1);
-        footprint.setAttribute("class", "footprint");
+            // 每個圖片啟動獨立動畫
+            colleges.forEach(function (id) {
+                floatElement(id);
+            });
+        });
 
-        // 設置旋轉角度
-        footprint.setAttribute("transform", `rotate(${rotation}, ${x + 8}, ${y + 8})`);
+        $(".scene").on("click", function () {
 
-        svg.appendChild(footprint);
+            if ($(this).data("opened")) return;
+            $(this).data("opened", true);
 
-        // 設定計時器，讓腳印在一段時間後淡出
-        setTimeout(() => {
-            footprint.style.opacity = 0;
+            // 背景漸顯 & 縮回原比例
+            $(".background").css({
+                "transform": "scale(1)",
+                "opacity": "1"
+            });
+
+            // 左頁翻開並淡出
+            $(".left").animate(
+                { deg: -180 },
+                {
+                    duration: 5000,
+                    step: function (now) {
+                        $(this).css("transform", "rotateY(" + now + "deg)");
+                        $(this).css("opacity", 1 - Math.abs(now) / 180);
+                    }
+                }
+            );
+
+            // 右頁翻開並淡出
+            $(".right").animate(
+                { deg: 180 },
+                {
+                    duration: 5000,
+                    step: function (now) {
+                        $(this).css("transform", "rotateY(" + now + "deg)");
+                        $(this).css("opacity", 1 - Math.abs(now) / 180);
+                    },
+                    complete: function () {
+                        $(".scene").css("overflow-y", "auto");
+                        $(".scene").animate(
+                            { scrollTop: $(".scene")[0].scrollHeight },
+                            3000    // 捲動時間 2 秒
+                        );
+                    }
+                }
+            );
+        });
+
+
+        // 設定路徑點
+        const route = document.getElementById('route');
+        const svg = document.getElementById('svgCanvas');
+        // 設定腳印動畫
+        let currentPosition = 0;
+        let isLeftFoot = true;
+        const footOffset = 4; // 腳印與路徑的偏移量
+        const intervalTime = 400; // 每800ms產生一個腳印
+        const disappearTime = 2300; // 腳印多久後開始淡出（毫秒）
+
+        function createFootprint(x, y, isLeft, rotation) {
+            let footprint = document.createElementNS("http://www.w3.org/2000/svg", "image");
+            footprint.setAttribute("href", isLeft ? "img/left-footprint.png" : "img/right-footprint.png");
+            footprint.setAttribute("x", x);
+            footprint.setAttribute("y", y);
+            footprint.setAttribute("width", 10);
+            footprint.setAttribute("height", 10);
+            footprint.setAttribute("opacity", 1);
+            footprint.setAttribute("class", "footprint");
+
+            // 設置旋轉角度
+            footprint.setAttribute("transform", `rotate(${rotation}, ${x + 8}, ${y + 8})`);
+
+            svg.appendChild(footprint);
+
+            // 設定計時器，讓腳印在一段時間後淡出
             setTimeout(() => {
-                svg.removeChild(footprint); // 完全消失後刪除
-            }, 1000);
-        }, disappearTime);
-    }
-
-    // 設置淡入淡出的函數
-    function fadeInOut(footprint, isVisible) {
-        if (isVisible) {
-            footprint.setAttribute('opacity', 1);  // 淡入
-            footprint.setAttribute('visibility', 'visible');
-        } else {
-            footprint.setAttribute('opacity', 0);  // 淡出
-            footprint.setAttribute('visibility', 'hidden');
-        }
-    }
-
-    function updateFootprints() {
-        const pathLength = route.getTotalLength();
-        if (currentPosition > pathLength) {
-            currentPosition = 0;  // 重置位置
-        }
-        
-        const point = route.getPointAtLength(currentPosition);
-        const nextPoint = route.getPointAtLength(currentPosition + 10); // 預測下一步
-        
-        let angle = Math.atan2(nextPoint.y - point.y, nextPoint.x - point.x) * (180 / Math.PI);
-        
-        // 偵測轉彎
-        const furtherPoint = route.getPointAtLength(currentPosition + 20);
-        let nextAngle = Math.atan2(furtherPoint.y - nextPoint.y, furtherPoint.x - nextPoint.x) * (180 / Math.PI);
-        
-        let angleDifference = nextAngle - angle;
-        
-        // 轉彎時，調整旋轉角度
-        if (Math.abs(angleDifference) > 10) { 
-            angle += angleDifference / 2; // 平滑過渡
-        }
-        
-        let offsetX = Math.cos((angle + 90) * Math.PI / 180) * footOffset;
-        let offsetY = Math.sin((angle + 90) * Math.PI / 180) * footOffset;
-        
-        let leftX = point.x - offsetX;
-        let leftY = point.y - offsetY;
-        let rightX = point.x + offsetX;
-        let rightY = point.y + offsetY;
-        let deviation = angle >= 90 ? 12 : 5;
-
-        if (isLeftFoot) {
-            createFootprint(leftX - deviation, leftY - deviation, true, angle);
-        } else {
-            createFootprint(rightX - deviation, rightY - deviation, false, angle);
-        }
-        
-        isLeftFoot = !isLeftFoot;
-        currentPosition += 10;
-    }
-
-
-
-    // 取得 URL 參數
-    function getSeatIdFromURL() {
-        let params = new URLSearchParams(window.location.search);
-        return params.get("id"); // 取得 ?id=xxx 的值
-    }
-
-    // 模擬掃描 QR Code，實際應用可以用 qrcode.js 或後端 API 讀取
-    function onScanQRCode(seatId) {
-        let entrance = { x: 50, y: 50 }; // 門口座標
-        let seat = document.getElementById(seatId);
-
-        if (!seat) {
-            alert("座位不存在！");
-            return;
+                footprint.style.opacity = 0;
+                setTimeout(() => {
+                    svg.removeChild(footprint); // 完全消失後刪除
+                }, 1000);
+            }, disappearTime);
         }
 
-        // 取得座位座標
-        let seatX = seat.getAttribute("cx");
-        let seatY = seat.getAttribute("cy");
+        // 設置淡入淡出的函數
+        function fadeInOut(footprint, isVisible) {
+            if (isVisible) {
+                footprint.setAttribute('opacity', 1);  // 淡入
+                footprint.setAttribute('visibility', 'visible');
+            } else {
+                footprint.setAttribute('opacity', 0);  // 淡出
+                footprint.setAttribute('visibility', 'hidden');
+            }
+        }
 
-        // 繪製路徑
-        let pathLine = document.getElementById("path-line");
-        pathLine.setAttribute("points", `${entrance.x},${entrance.y} ${seatX},${seatY}`);
-    }
-</script>
+        function updateFootprints() {
+            const pathLength = route.getTotalLength();
+            if (currentPosition > pathLength) {
+                currentPosition = 0;  // 重置位置
+            }
+
+            const point = route.getPointAtLength(currentPosition);
+            const nextPoint = route.getPointAtLength(currentPosition + 10); // 預測下一步
+
+            let angle = Math.atan2(nextPoint.y - point.y, nextPoint.x - point.x) * (180 / Math.PI);
+
+            // 偵測轉彎
+            const furtherPoint = route.getPointAtLength(currentPosition + 20);
+            let nextAngle = Math.atan2(furtherPoint.y - nextPoint.y, furtherPoint.x - nextPoint.x) * (180 / Math.PI);
+
+            let angleDifference = nextAngle - angle;
+
+            // 轉彎時，調整旋轉角度
+            if (Math.abs(angleDifference) > 10) {
+                angle += angleDifference / 2; // 平滑過渡
+            }
+
+            let offsetX = Math.cos((angle + 90) * Math.PI / 180) * footOffset;
+            let offsetY = Math.sin((angle + 90) * Math.PI / 180) * footOffset;
+
+            let leftX = point.x - offsetX;
+            let leftY = point.y - offsetY;
+            let rightX = point.x + offsetX;
+            let rightY = point.y + offsetY;
+            let deviation = angle >= 90 ? 12 : 5;
+
+            if (isLeftFoot) {
+                createFootprint(leftX - deviation, leftY - deviation, true, angle);
+            } else {
+                createFootprint(rightX - deviation, rightY - deviation, false, angle);
+            }
+
+            isLeftFoot = !isLeftFoot;
+            currentPosition += 10;
+        }
+
+
+
+        // 取得 URL 參數
+        function getSeatIdFromURL() {
+            let params = new URLSearchParams(window.location.search);
+            return params.get("id"); // 取得 ?id=xxx 的值
+        }
+
+        // 模擬掃描 QR Code，實際應用可以用 qrcode.js 或後端 API 讀取
+        function onScanQRCode(seatId) {
+            let entrance = { x: 50, y: 50 }; // 門口座標
+            let seat = document.getElementById(seatId);
+
+            if (!seat) {
+                alert("座位不存在！");
+                return;
+            }
+
+            // 取得座位座標
+            let seatX = seat.getAttribute("cx");
+            let seatY = seat.getAttribute("cy");
+
+            // 繪製路徑
+            let pathLine = document.getElementById("path-line");
+            pathLine.setAttribute("points", `${entrance.x},${entrance.y} ${seatX},${seatY}`);
+        }
+    </script>
 
 </body>
+
 </html>
