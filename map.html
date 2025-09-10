@@ -6,12 +6,15 @@
     <title>WeddingMap</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link rel="preload" as="image" href="img/background.png">
     <style>
-        html, body {
+        html,
+        body {
             margin: 0;
             padding: 0;
             height: 100%;
-            overflow: hidden; /* 避免 body 出現雙重捲軸 */
+            overflow: hidden;
+            /* 避免 body 出現雙重捲軸 */
         }
 
         image {
@@ -86,40 +89,14 @@
             transform-origin: right center;
         }
 
-        #Gryffindor {
+        .colleges {
             position: absolute;
             /* 需要讓top/left可以控制 */
             top: 75px;
-            left: 93px;
             width: 150px;
             z-index: 1;
-        }
-
-        #Hufflepuff {
-            position: absolute;
-            /* 需要讓top/left可以控制 */
-            top: 75px;
-            left: 276px;
-            width: 150px;
-            z-index: 1;
-        }
-
-        #Ravenclaw {
-            position: absolute;
-            /* 需要讓top/left可以控制 */
-            top: 75px;
-            left: 553px;
-            width: 150px;
-            z-index: 1;
-        }
-
-        #Slytherin {
-            position: absolute;
-            /* 需要讓top/left可以控制 */
-            top: 75px;
-            left: 735px;
-            width: 150px;
-            z-index: 1;
+            opacity: 0;
+            transition: opacity 0.5s ease;
         }
 
         .fullscreen-background {
@@ -129,6 +106,76 @@
             position: relative;
         }
 
+        /* 遮罩 */
+        #orientation-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2em;
+            z-index: 9999;
+            text-align: center;
+            padding: 20px;
+
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+        }
+
+        /* 顯示狀態 */
+        #orientation-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* 手機圖示 */
+        .phone-icon {
+            width: 80px;
+            height: 120px;
+            border: 4px solid #fff;
+            border-radius: 15px;
+            position: relative;
+            margin-bottom: 20px;
+            animation: rotate-phone 2s infinite;
+        }
+
+        /* 螢幕 */
+        .phone-icon::before {
+            content: "";
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            right: 8px;
+            bottom: 8px;
+            background: #333;
+            border-radius: 10px;
+        }
+
+        /* 旋轉動畫 */
+        @keyframes rotate-phone {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            30% {
+                transform: rotate(90deg);
+            }
+
+            60% {
+                transform: rotate(90deg);
+            }
+
+            100% {
+                transform: rotate(0deg);
+            }
+        }
     </style>
 </head>
 
@@ -138,36 +185,29 @@
             <div class="page left"></div>
             <div class="page right"></div>
         </div>
-        <svg id="svgCanvas"
-            viewBox="0 0 1920 2160"
-            class="fullscreen-background"
-            preserveAspectRatio="xMidYMid meet">
-            
-            <image href="img/seating_chart.jpg"
-                    x="0" y="0"
-                    width="1920"
-                    height="2160"
-                    class="background" />
-        
-            <path id="route"
-                    fill="transparent"
-                    stroke="black"
-                    stroke-width="2"
-                    d="M0 190 L210 170 L240 50 L450 65 L420 600"
-                    visibility="hidden" />
-        </svg>
-   
-        <img id="Gryffindor" src="img/Gryffindor.png" alt="Gryffindor">
-        <img id="Hufflepuff" src="img/Hufflepuff.png" alt="Hufflepuff">
-        <img id="Ravenclaw" src="img/Ravenclaw.png" alt="Ravenclaw">
-        <img id="Slytherin" src="img/Slytherin.png" alt="Slytherin">
+        <svg id="svgCanvas" viewBox="0 0 1920 2160" class="fullscreen-background" preserveAspectRatio="xMidYMid meet">
 
+            <image href="img/seating_chart.jpg" x="0" y="0" width="1920" height="2160" class="background" />
+
+            <path id="route" fill="transparent" stroke="black" stroke-width="2"
+                d="M0 190 L210 170 L240 50 L450 65 L420 600" visibility="hidden" />
+        </svg>
+
+        <img id="Gryffindor" class="colleges" style="left:93px" src="img/Gryffindor.png" alt="Gryffindor">
+        <img id="Hufflepuff" class="colleges" style="left:276px" src="img/Hufflepuff.png" alt="Hufflepuff">
+        <img id="Ravenclaw" class="colleges" style="left:553px" src="img/Ravenclaw.png" alt="Ravenclaw">
+        <img id="Slytherin" class="colleges" style="left:735px" src="img/Slytherin.png" alt="Slytherin">
+
+    </div>
+    <div id="orientation-overlay">
+        <div class="phone-icon"></div>
+        <div>請將手機旋轉至橫向模式</div>
     </div>
     <!-- <p1>你的座位資訊</p1>
     <p id="seat-info"></p> -->
-    
-    
-   
+
+
+
     <!-- <div id="test"></div> -->
     <script>
         $(function () {
@@ -184,6 +224,13 @@
             //     onScanQRCode(seatId);
             // }, 2000);
             // 設定間隔，定期更新腳印位置
+                    // 初始化檢查
+            checkOrientation();
+
+            // 當螢幕方向改變時檢查
+            window.addEventListener("orientationchange", checkOrientation);
+            window.addEventListener("resize", checkOrientation);
+
             setInterval(updateFootprints, intervalTime);
             var colleges = ["Gryffindor", "Hufflepuff", "Ravenclaw", "Slytherin"];
             var baseTop = {
@@ -205,6 +252,20 @@
                 floatElement(id);
             });
         });
+
+        function checkOrientation() {
+            const overlay = document.getElementById('orientation-overlay');
+
+            if (window.matchMedia("(orientation: portrait)").matches) {
+                overlay.classList.add("show"); // 顯示遮罩 (淡入)
+                document.body.style.overflow = "hidden"; // 禁止滾動
+            } else {
+                overlay.classList.remove("show"); // 隱藏遮罩 (淡出)
+                document.body.style.overflow = "auto"; // 恢復滾動
+            }
+        }
+
+
 
         $(".scene").on("click", function () {
 
@@ -239,11 +300,19 @@
                         $(this).css("opacity", 1 - Math.abs(now) / 180);
                     },
                     complete: function () {
-                        $(".scene").css("overflow-y", "auto");
-                        $(".scene").animate(
-                            { scrollTop: $(".scene")[0].scrollHeight },
-                            3000    // 捲動時間 2 秒
-                        );
+                        // 學院出現
+                        $(".colleges").css({
+                            "opacity": "1"
+                        });
+                        setTimeout(function () {
+                            $(".scene").css("overflow-y", "auto");
+
+                            $(".scene").animate(
+                                { scrollTop: $(".scene")[0].scrollHeight },
+                                3000    // 捲動時間 2 秒
+                            );
+                        }, 2000);
+
                     }
                 }
             );
