@@ -243,6 +243,11 @@
             transform: translateX(-50%);
             display: none;
         }
+
+        .ribbon{
+            opacity: 0;
+            transition: transform 5s ease, opacity 5s ease;
+        }
     </style>
 </head>
 
@@ -261,11 +266,33 @@
             <svg id="svgCanvas" viewBox="0 0 1920 2160" class="fullscreen-background"
                 preserveAspectRatio="xMidYMid meet">
 
-                <image href="img/seating_chart.jpg" x="0" y="0" width="1920" height="2160" class="background" />
+                <!-- 背景圖片 -->
+                <image href="img/seating_chart.jpg" class="background" x="0" y="0" width="1920" height="2160" />
 
+                <!-- 路線 -->
                 <path id="route" fill="transparent" stroke="black" stroke-width="2"
                     d="M0 190 L210 170 L240 50 L450 65 L420 600" visibility="hidden" />
+
+                <!-- 定義向下的弧形路徑 -->
+                <defs>
+                    <!-- 從左到右，弧形向下 -->
+                    <path id="arcPathDown" d="M840,1942 A300,400 0 0,0 1080,1942" fill="transparent" />
+                </defs>
+
+                <!-- 前景圖片 -->
+                <image href="img/ribbon.png" class="ribbon" x="860" y="1900" width="200" height="100" />
+
+                <!-- 文字沿向下弧形排列 -->
+                <text font-size="26" font-weight="bold" fill="#5C3426">
+                    <textPath href="#arcPathDown" class="ribbon" startOffset="50%" text-anchor="middle">
+                        柯承佑
+                    </textPath>
+                </text>
+
             </svg>
+
+
+
             <div class="line-vertical"></div>
             <img id="Gryffindor" class="colleges" style="left:93px" src="img/Gryffindor.png" alt="Gryffindor">
             <img id="Hufflepuff" class="colleges" style="left:276px" src="img/Hufflepuff.png" alt="Hufflepuff">
@@ -426,6 +453,9 @@
                                     $('#door-left').css({
                                         "transform-origin": "0% 100%",
                                         "transform": "rotate(-15deg)"
+                                    });
+                                    $('.ribbon').css({
+                                        "opacity" : "1"
                                     });
                                 }
                             );
