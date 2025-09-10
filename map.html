@@ -244,7 +244,7 @@
             display: none;
         }
 
-        .ribbon{
+        .ribbon {
             opacity: 0;
             transition: transform 5s ease, opacity 5s ease;
         }
@@ -277,22 +277,26 @@
                 <defs>
                     <!-- 從左到右，弧形向下 -->
                     <path id="arcPathDown" d="M840,1942 A300,400 0 0,0 1080,1942" fill="transparent" />
+                    <path id="motionPath" d="M0 0 L0 -500" fill="transparent" />
                 </defs>
+                <g id="ribbonGroup">
+                    <!-- 前景圖片 -->
+                    <image href="img/ribbon.png" class="ribbon" x="860" y="1900" width="200" height="100" />
 
-                <!-- 前景圖片 -->
-                <image href="img/ribbon.png" class="ribbon" x="860" y="1900" width="200" height="100" />
-
-                <!-- 文字沿向下弧形排列 -->
-                <text font-size="26" font-weight="bold" fill="#5C3426">
-                    <textPath href="#arcPathDown" class="ribbon" startOffset="50%" text-anchor="middle">
-                        柯承佑
-                    </textPath>
-                </text>
+                    <!-- 文字沿向下弧形排列 -->
+                    <text font-size="26" font-weight="bold" fill="#5C3426">
+                        <textPath href="#arcPathDown" class="ribbon" startOffset="50%" text-anchor="middle">
+                            柯承佑
+                        </textPath>
+                    </text>
+                    <!-- 沿路線移動動畫 -->
+                    <animateMotion id="motionAnim" dur="10s" repeatCount="indefinite" begin="indefinite">
+                        <mpath href="#motionPath"/>
+                    </animateMotion>
+                </g>
 
             </svg>
-
-
-
+            
             <div class="line-vertical"></div>
             <img id="Gryffindor" class="colleges" style="left:93px" src="img/Gryffindor.png" alt="Gryffindor">
             <img id="Hufflepuff" class="colleges" style="left:276px" src="img/Hufflepuff.png" alt="Hufflepuff">
@@ -454,18 +458,26 @@
                                         "transform-origin": "0% 100%",
                                         "transform": "rotate(-15deg)"
                                     });
-                                    $('.ribbon').css({
-                                        "opacity" : "1"
-                                    });
+                                    
                                 }
                             );
                         }, colleges.length * 500 + 1500); // 延遲時間 = 每個學院延遲總和 + 動畫時間
+
+                        setTimeout(function(){
+                            $('.ribbon').css({
+                                "opacity": "1"
+                            });
+                        }, colleges.length * 500 + 1500 + 5000);
+
+                        setTimeout(function(){
+                            const anim = document.getElementById('motionAnim');
+                            anim.beginElement(); // 啟動動畫
+                        }, colleges.length * 500 + 1500 + 8000);
 
                     }
                 }
             );
         });
-
 
         // 設定路徑點
         const route = document.getElementById('route');
