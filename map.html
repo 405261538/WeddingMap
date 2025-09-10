@@ -113,7 +113,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.9);
+            background: rgba(0, 0, 0, 1);
             color: #fff;
             display: flex;
             flex-direction: column;
@@ -176,29 +176,70 @@
                 transform: rotate(0deg);
             }
         }
+
+        /* Loading 畫面樣式 */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            z-index: 10000;
+        }
+
+        /* 可加上簡單動畫 */
+        .loader {
+            animation: blink 1.2s infinite;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.3;
+            }
+        }
     </style>
 </head>
 
 <body>
-    <div class="scene">
-        <div class="book">
-            <div class="page left"></div>
-            <div class="page right"></div>
-        </div>
-        <svg id="svgCanvas" viewBox="0 0 1920 2160" class="fullscreen-background" preserveAspectRatio="xMidYMid meet">
-
-            <image href="img/seating_chart.jpg" x="0" y="0" width="1920" height="2160" class="background" />
-
-            <path id="route" fill="transparent" stroke="black" stroke-width="2"
-                d="M0 190 L210 170 L240 50 L450 65 L420 600" visibility="hidden" />
-        </svg>
-
-        <img id="Gryffindor" class="colleges" style="left:93px" src="img/Gryffindor.png" alt="Gryffindor">
-        <img id="Hufflepuff" class="colleges" style="left:276px" src="img/Hufflepuff.png" alt="Hufflepuff">
-        <img id="Ravenclaw" class="colleges" style="left:553px" src="img/Ravenclaw.png" alt="Ravenclaw">
-        <img id="Slytherin" class="colleges" style="left:735px" src="img/Slytherin.png" alt="Slytherin">
-
+    <!-- Loading 畫面 -->
+    <div id="loading-screen">
+        <div class="loader">載入中...</div>
     </div>
+    <div id="page-content" style="display:none;">
+        <div class="scene">
+            <div class="book">
+                <div class="page left"></div>
+                <div class="page right"></div>
+            </div>
+            <svg id="svgCanvas" viewBox="0 0 1920 2160" class="fullscreen-background"
+                preserveAspectRatio="xMidYMid meet">
+
+                <image href="img/seating_chart.jpg" x="0" y="0" width="1920" height="2160" class="background" />
+
+                <path id="route" fill="transparent" stroke="black" stroke-width="2"
+                    d="M0 190 L210 170 L240 50 L450 65 L420 600" visibility="hidden" />
+            </svg>
+
+            <img id="Gryffindor" class="colleges" style="left:93px" src="img/Gryffindor.png" alt="Gryffindor">
+            <img id="Hufflepuff" class="colleges" style="left:276px" src="img/Hufflepuff.png" alt="Hufflepuff">
+            <img id="Ravenclaw" class="colleges" style="left:553px" src="img/Ravenclaw.png" alt="Ravenclaw">
+            <img id="Slytherin" class="colleges" style="left:735px" src="img/Slytherin.png" alt="Slytherin">
+
+        </div>
+    </div>
+
     <div id="orientation-overlay">
         <div class="phone-icon"></div>
         <div>請將手機旋轉至橫向模式</div>
@@ -210,6 +251,10 @@
 
     <!-- <div id="test"></div> -->
     <script>
+        window.onload = function () {
+            document.getElementById("loading-screen").style.display = "none";
+            document.getElementById("page-content").style.display = "block";
+        };
         $(function () {
             // let seatId = getSeatIdFromURL();
             // if (seatId) {
@@ -224,7 +269,7 @@
             //     onScanQRCode(seatId);
             // }, 2000);
             // 設定間隔，定期更新腳印位置
-                    // 初始化檢查
+            // 初始化檢查
             checkOrientation();
 
             // 當螢幕方向改變時檢查
