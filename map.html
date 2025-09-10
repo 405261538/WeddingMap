@@ -251,7 +251,19 @@
 
     <!-- <div id="test"></div> -->
     <script>
-        window.onload = function () {
+        // 只等背景圖載入完成再顯示內容
+        const bgImg = new Image();
+        bgImg.src = "img/background.png";
+
+        bgImg.onload = function () {
+            // 背景載入完成 → 隱藏 Loading 顯示內容
+            document.getElementById("loading-screen").style.display = "none";
+            document.getElementById("page-content").style.display = "block";
+        };
+
+        bgImg.onerror = function () {
+            console.error("背景圖載入失敗");
+            // 即使失敗，也要顯示內容，避免卡死
             document.getElementById("loading-screen").style.display = "none";
             document.getElementById("page-content").style.display = "block";
         };
