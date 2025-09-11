@@ -7,255 +7,17 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <link rel="preload" as="image" href="https://i.meee.com.tw/pFhTRSj.png">
-    <style>
-        html,
-        body {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            overflow: hidden;
-            font-family: "SimSun", "宋体", "NSimSun", "Microsoft YaHei", serif;
-        }
-
-        image {
-            transition: opacity 0.5s ease-in-out;
-        }
-
-
-
-        /* 場景容器：可上下滑動 */
-        .scene {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-            /* 佔滿螢幕 */
-            overflow-y: hidden;
-            /* 允許上下捲動 */
-            overflow-x: hidden;
-            /* 水平方向固定 */
-            perspective: 1200px;
-            background: #000;
-            /* 若圖片比例不符，兩側補黑邊 */
-        }
-
-        /* 背景圖：等比縮放，寬度100% */
-        .background {
-            display: block;
-            width: 100%;
-            height: auto;
-            /* 高度依比例 */
-            transform: scale(2);
-            opacity: 0;
-            transition: transform 5s ease, opacity 5s ease;
-            z-index: 1;
-            position: relative;
-            /* 讓它隨容器滾動 */
-        }
-
-        /* 書本容器 */
-        .book {
-            position: fixed;
-            /* 固定在螢幕上，不跟著滾動 */
-            top: 50%;
-            left: 50%;
-            width: 100vw;
-            height: calc(100vw * 9 / 16);
-            /* 預設16:9比例 */
-            transform: translate(-50%, -50%);
-            z-index: 2;
-        }
-
-        /* 翻開的左右頁 */
-        .page {
-            position: absolute;
-            top: 0;
-            width: 50%;
-            height: 100%;
-            background-image: url('https://i.meee.com.tw/pFhTRSj.png');
-            background-size: cover;
-            background-repeat: no-repeat;
-            backface-visibility: hidden;
-        }
-
-        .left {
-            left: 0;
-            background-position: left;
-            transform-origin: left center;
-        }
-
-        .right {
-            right: 0;
-            background-position: right;
-            transform-origin: right center;
-        }
-
-        .colleges {
-            position: absolute;
-            /* 需要讓top/left可以控制 */
-            top: 75px;
-            width: 150px;
-            z-index: 1;
-            opacity: 0;
-            transition: opacity 0.5s ease;
-        }
-
-        .door {
-            position: absolute;
-            top: 1094px;
-            width: 130px;
-            height: 8px;
-            z-index: 1;
-            opacity: 1;
-            transition: transform 1.5s ease-in-out;
-            /* 動畫 1.5 秒，漸進漸出 */
-        }
-
-        .door-font {
-            position: absolute;
-            top: 1072px;
-            width: 67px;
-            height: auto;
-            z-index: 1;
-            opacity: 1;
-            transition: opacity 2s ease-in-out;
-            left: 456px;
-        }
-
-        .fullscreen-background {
-            display: block;
-            width: 100%;
-            height: auto;
-            position: relative;
-        }
-
-        /* 遮罩 */
-        #orientation-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 1);
-            color: #fff;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            font-size: 1.2em;
-            z-index: 9999;
-            text-align: center;
-            padding: 20px;
-
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.6s ease, visibility 0.6s ease;
-        }
-
-        /* 顯示狀態 */
-        #orientation-overlay.show {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        /* 手機圖示 */
-        .phone-icon {
-            width: 80px;
-            height: 120px;
-            border: 4px solid #fff;
-            border-radius: 15px;
-            position: relative;
-            margin-bottom: 20px;
-            animation: rotate-phone 2s infinite;
-        }
-
-        /* 螢幕 */
-        .phone-icon::before {
-            content: "";
-            position: absolute;
-            top: 8px;
-            left: 8px;
-            right: 8px;
-            bottom: 8px;
-            background: #333;
-            border-radius: 10px;
-        }
-
-        /* 旋轉動畫 */
-        @keyframes rotate-phone {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            30% {
-                transform: rotate(90deg);
-            }
-
-            60% {
-                transform: rotate(90deg);
-            }
-
-            100% {
-                transform: rotate(0deg);
-            }
-        }
-
-        /* Loading 畫面樣式 */
-        #loading-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #000;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            z-index: 10000;
-        }
-
-        /* 可加上簡單動畫 */
-        .loader {
-            animation: blink 1.2s infinite;
-        }
-
-        @keyframes blink {
-
-            0%,
-            100% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.3;
-            }
-        }
-
-        .line-vertical {
-            position: absolute;
-            top: 0;
-            left: 50%;
-            /* 水平置中 */
-            width: 2px;
-            height: 1100px;
-            background: black;
-            transform: translateX(-50%);
-            display: none;
-        }
-
-        .ribbon {
-            opacity: 0;
-            transition: transform 5s ease, opacity 5s ease;
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
 
-    <!-- Loading 畫面 -->
     <div id="loading-screen">
         <div class="loader">載入中...</div>
+    </div>
+    <div id="orientation-overlay">
+        <div class="phone-icon"></div>
+        <div>請將手機旋轉至橫向模式</div>
     </div>
     <div id="page-content" style="display:none;">
         <div class="scene">
@@ -267,7 +29,8 @@
                 preserveAspectRatio="xMidYMid meet">
 
                 <!-- 背景圖片 -->
-                <image href="https://i.meee.com.tw/cNimNcK.jpg" class="background" x="0" y="0" width="1920" height="2160" />
+                <image href="https://i.meee.com.tw/cNimNcK.jpg" class="background" x="0" y="0" width="1920"
+                    height="2160" />
 
                 <!-- 路線 -->
                 <path id="route" fill="transparent" stroke="black" stroke-width="2"
@@ -281,7 +44,8 @@
                 </defs>
                 <g id="ribbonGroup">
                     <!-- 前景圖片 -->
-                    <image href="https://i.meee.com.tw/5VqdeNQ.png" class="ribbon" x="860" y="1900" width="200" height="100" />
+                    <image href="https://i.meee.com.tw/5VqdeNQ.png" class="ribbon" x="860" y="1900" width="200"
+                        height="100" />
 
                     <!-- 文字沿向下弧形排列 -->
                     <text font-size="26" font-weight="bold" fill="#5C3426">
@@ -291,34 +55,38 @@
                     </text>
                     <!-- 沿路線移動動畫 -->
                     <animateMotion id="motionAnim" dur="10s" repeatCount="indefinite" begin="indefinite">
-                        <mpath href="#motionPath"/>
+                        <mpath href="#motionPath" />
                     </animateMotion>
                 </g>
 
             </svg>
-            
+
             <div class="line-vertical"></div>
-            <img id="Gryffindor" class="colleges" style="left:93px" src="https://i.meee.com.tw/TdIjOoA.png" alt="Gryffindor">
-            <img id="Hufflepuff" class="colleges" style="left:276px" src="https://i.meee.com.tw/KSE8csC.png" alt="Hufflepuff">
-            <img id="Ravenclaw" class="colleges" style="left:553px" src="https://i.meee.com.tw/zmxSXuE.png" alt="Ravenclaw">
-            <img id="Slytherin" class="colleges" style="left:735px" src="https://i.meee.com.tw/z6jyuTN.png" alt="Slytherin">
+            <img id="Gryffindor" class="colleges" style="left:93px" src="https://i.meee.com.tw/TdIjOoA.png"
+                alt="Gryffindor">
+            <img id="Hufflepuff" class="colleges" style="left:276px" src="https://i.meee.com.tw/KSE8csC.png"
+                alt="Hufflepuff">
+            <img id="Ravenclaw" class="colleges" style="left:553px" src="https://i.meee.com.tw/zmxSXuE.png"
+                alt="Ravenclaw">
+            <img id="Slytherin" class="colleges" style="left:735px" src="https://i.meee.com.tw/z6jyuTN.png"
+                alt="Slytherin">
             <img id="door-left" class="door" style="left:360px" src="https://i.meee.com.tw/EhK8iZB.png">
             <img id="door-right" class="door" style="left:490px" src="https://i.meee.com.tw/EhK8iZB.png">
-            <img id="door-font" class="door-font" src="https://i.meee.com.tw/ZNb98qo.png">
+            <!-- <img id="door-font" class="door-font" src="https://i.meee.com.tw/ZNb98qo.png"> -->
         </div>
     </div>
 
-    <div id="orientation-overlay">
-        <div class="phone-icon"></div>
-        <div>請將手機旋轉至橫向模式</div>
-    </div>
-    <!-- <p1>你的座位資訊</p1>
-    <p id="seat-info"></p> -->
-
-
-
-    <!-- <div id="test"></div> -->
     <script>
+        var colleges = ["Gryffindor", "Hufflepuff", "Ravenclaw", "Slytherin"];
+        var baseTop = {
+            "Gryffindor": 75,
+            "Hufflepuff": 75,
+            "Ravenclaw": 75,
+            "Slytherin": 75
+        };
+
+        //#region 圖片載入檢核
+
         // 要檢查的圖片清單
         const requiredImages = [
             "https://i.meee.com.tw/pFhTRSj.png",
@@ -353,7 +121,94 @@
                 checkAllLoaded(); // 即使失敗也不要卡住
             };
         });
+        //#endregion
+
         $(function () {
+
+            // 初始化檢查
+            checkOrientation();
+
+            // 當螢幕方向改變時檢查
+            window.addEventListener("orientationchange", checkOrientation);
+            window.addEventListener("resize", checkOrientation);
+
+            //封面翻頁
+            $(".scene").on("click", function () {
+
+                if ($(this).data("opened")) return;
+                $(this).data("opened", true);
+
+                // 背景漸顯 & 縮回原比例
+                $(".background").css({
+                    "transform": "scale(1)",
+                    "opacity": "1"
+                });
+
+                // 左頁翻開並淡出
+                $(".left").animate(
+                    { deg: -180 },
+                    {
+                        duration: 5000,
+                        step: function (now) {
+                            $(this).css("transform", "rotateY(" + now + "deg)");
+                            $(this).css("opacity", 1 - Math.abs(now) / 180);
+                        }
+                    }
+                );
+
+                // 右頁翻開並淡出
+                $(".right").animate(
+                    { deg: 180 },
+                    {
+                        duration: 5000,
+                        step: function (now) {
+                            $(this).css("transform", "rotateY(" + now + "deg)");
+                            $(this).css("opacity", 1 - Math.abs(now) / 180);
+                        },
+                        complete: function () {
+                            // 依序顯示學院
+                            colleges.forEach(function (id, index) {
+                                // 每個學院延遲 0.5 秒 * index
+                                setTimeout(function () {
+                                    $('#' + id).animate({ opacity: 1 }, 500, function () {
+                                        floatElement(id); // 顯示完成後啟動漂浮
+                                    });
+                                }, index * 500);
+                            });
+
+                            // 總延遲等學院都出現完後再捲動場景
+                            setTimeout(function () {
+                                $(".scene").css("overflow-y", "auto").animate(
+                                    { scrollTop: $(".scene")[0].scrollHeight },
+                                    3000,
+                                    function () {
+                                        // 捲動完成後打開門
+                                        $('#door-left').css({
+                                            "transform-origin": "0% 100%",
+                                            "transform": "rotate(-15deg)"
+                                        });
+
+                                    }
+                                );
+                            }, colleges.length * 500 + 1500);
+
+                            setTimeout(function () {
+                                $('.ribbon').css({
+                                    "opacity": "1"
+                                });
+                            }, colleges.length * 500 + 1500 + 5000);
+
+                            setTimeout(function () {
+                                const anim = document.getElementById('motionAnim');
+                                anim.beginElement(); // 啟動動畫
+                            }, colleges.length * 500 + 1500 + 8000);
+
+                        }
+                    }
+                );
+            });
+
+
             // let seatId = getSeatIdFromURL();
             // if (seatId) {
             //     document.getElementById("seat-info").innerText = `你的座位號碼是：${seatId}`;
@@ -366,118 +221,15 @@
             // setTimeout(() => {
             //     onScanQRCode(seatId);
             // }, 2000);
+
             // 設定間隔，定期更新腳印位置
-            // 初始化檢查
-            checkOrientation();
-
-            // 當螢幕方向改變時檢查
-            window.addEventListener("orientationchange", checkOrientation);
-            window.addEventListener("resize", checkOrientation);
-
             //setInterval(updateFootprints, intervalTime);
+
+
         });
 
-        function checkOrientation() {
-            const overlay = document.getElementById('orientation-overlay');
 
-            if (window.matchMedia("(orientation: portrait)").matches) {
-                overlay.classList.add("show"); // 顯示遮罩 (淡入)
-                document.body.style.overflow = "hidden"; // 禁止滾動
-            } else {
-                overlay.classList.remove("show"); // 隱藏遮罩 (淡出)
-                document.body.style.overflow = "auto"; // 恢復滾動
-            }
-        }
-
-        var colleges = ["Gryffindor", "Hufflepuff", "Ravenclaw", "Slytherin"];
-        var baseTop = {
-            "Gryffindor": 75,
-            "Hufflepuff": 75,
-            "Ravenclaw": 75,
-            "Slytherin": 75
-        };
-
-        function floatElement(id) {
-            var newTop = baseTop[id] + (Math.random() * 20 - 10); // 上下隨機漂浮 ±10px
-            $('#' + id).animate({ top: newTop }, 2000, function () {
-                floatElement(id); // 動畫完成後繼續漂浮
-            });
-        }
-
-        $(".scene").on("click", function () {
-
-            if ($(this).data("opened")) return;
-            $(this).data("opened", true);
-
-            // 背景漸顯 & 縮回原比例
-            $(".background").css({
-                "transform": "scale(1)",
-                "opacity": "1"
-            });
-
-            // 左頁翻開並淡出
-            $(".left").animate(
-                { deg: -180 },
-                {
-                    duration: 5000,
-                    step: function (now) {
-                        $(this).css("transform", "rotateY(" + now + "deg)");
-                        $(this).css("opacity", 1 - Math.abs(now) / 180);
-                    }
-                }
-            );
-
-            // 右頁翻開並淡出
-            $(".right").animate(
-                { deg: 180 },
-                {
-                    duration: 5000,
-                    step: function (now) {
-                        $(this).css("transform", "rotateY(" + now + "deg)");
-                        $(this).css("opacity", 1 - Math.abs(now) / 180);
-                    },
-                    complete: function () {
-                        // 依序顯示學院
-                        colleges.forEach(function (id, index) {
-                            // 每個學院延遲 0.5 秒 * index
-                            setTimeout(function () {
-                                $('#' + id).animate({ opacity: 1 }, 500, function () {
-                                    floatElement(id); // 顯示完成後啟動漂浮
-                                });
-                            }, index * 500);
-                        });
-
-                        // 總延遲等學院都出現完後再捲動場景
-                        setTimeout(function () {
-                            $(".scene").css("overflow-y", "auto").animate(
-                                { scrollTop: $(".scene")[0].scrollHeight },
-                                3000,
-                                function () {
-                                    // 捲動完成後打開門
-                                    $('#door-left').css({
-                                        "transform-origin": "0% 100%",
-                                        "transform": "rotate(-15deg)"
-                                    });
-                                    
-                                }
-                            );
-                        }, colleges.length * 500 + 1500); // 延遲時間 = 每個學院延遲總和 + 動畫時間
-
-                        setTimeout(function(){
-                            $('.ribbon').css({
-                                "opacity": "1"
-                            });
-                        }, colleges.length * 500 + 1500 + 5000);
-
-                        setTimeout(function(){
-                            const anim = document.getElementById('motionAnim');
-                            anim.beginElement(); // 啟動動畫
-                        }, colleges.length * 500 + 1500 + 8000);
-
-                    }
-                }
-            );
-        });
+        //#region 腳印相關
 
         // 設定路徑點
         const route = document.getElementById('route');
@@ -565,7 +317,7 @@
             currentPosition += 10;
         }
 
-
+        //#endregion
 
         // 取得 URL 參數
         function getSeatIdFromURL() {
@@ -590,6 +342,27 @@
             // 繪製路徑
             let pathLine = document.getElementById("path-line");
             pathLine.setAttribute("points", `${entrance.x},${entrance.y} ${seatX},${seatY}`);
+        }
+
+        //漂浮效果
+        function floatElement(id) {
+            var newTop = baseTop[id] + (Math.random() * 20 - 10); // 上下隨機漂浮 ±10px
+            $('#' + id).animate({ top: newTop }, 2000, function () {
+                floatElement(id); // 動畫完成後繼續漂浮
+            });
+        }
+
+        /*檢核手機轉向*/
+        function checkOrientation() {
+            const overlay = document.getElementById('orientation-overlay');
+
+            if (window.matchMedia("(orientation: portrait)").matches) {
+                overlay.classList.add("show"); // 顯示遮罩 (淡入)
+                document.body.style.overflow = "hidden"; // 禁止滾動
+            } else {
+                overlay.classList.remove("show"); // 隱藏遮罩 (淡出)
+                document.body.style.overflow = "auto"; // 恢復滾動
+            }
         }
     </script>
 
