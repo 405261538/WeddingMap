@@ -34,13 +34,13 @@
 
                 <!-- 路線 -->
                 <path id="route" fill="transparent" stroke="black" stroke-width="2"
-                    d="M0 190 L210 170 L240 50 L450 65 L420 600" visibility="hidden" />
+                    d="M960 2020 L960 460 L860 430" visibility="hidden" />
 
                 <!-- 定義向下的弧形路徑 -->
                 <defs>
                     <!-- 從左到右，弧形向下 -->
                     <path id="arcPathDown" d="M840,1942 A300,400 0 0,0 1080,1942" fill="transparent" />
-                    <path id="motionPath" d="M0 0 L0 -500" fill="transparent" />
+                    <path id="motionPath" d="M0 0 L0 -1550 L-120 -1600" fill="transparent" />
                 </defs>
                 <g id="ribbonGroup">
                     <!-- 前景圖片 -->
@@ -54,7 +54,7 @@
                         </textPath>
                     </text>
                     <!-- 沿路線移動動畫 -->
-                    <animateMotion id="motionAnim" dur="10s" repeatCount="indefinite" begin="indefinite">
+                    <animateMotion id="motionAnim" dur="20s" repeatCount="indefinite" begin="indefinite">
                         <mpath href="#motionPath" />
                     </animateMotion>
                 </g>
@@ -131,6 +131,10 @@
             // 當螢幕方向改變時檢查
             window.addEventListener("orientationchange", checkOrientation);
             window.addEventListener("resize", checkOrientation);
+            
+            //for test
+            //setInterval(updateFootprints, intervalTime);
+            //$(".scene").css("overflow-y", "auto");
 
             //封面翻頁
             $(".scene").on("click", function () {
@@ -200,7 +204,15 @@
 
                             setTimeout(function () {
                                 const anim = document.getElementById('motionAnim');
+                                // 動態算 dur
+                                const pathLength = route.getTotalLength();
+                                let steps = pathLength / 25;
+                                let totalTime = steps * intervalTime + 250; 
+                                anim.setAttribute("dur", (totalTime / 1000) + "s");
                                 anim.beginElement(); // 啟動動畫
+                                // 設定間隔，定期更新腳印位置
+                                setInterval(updateFootprints, intervalTime);
+
                             }, colleges.length * 500 + 1500 + 8000);
 
                         }
@@ -222,10 +234,6 @@
             //     onScanQRCode(seatId);
             // }, 2000);
 
-            // 設定間隔，定期更新腳印位置
-            //setInterval(updateFootprints, intervalTime);
-
-
         });
 
 
@@ -237,8 +245,8 @@
         // 設定腳印動畫
         let currentPosition = 0;
         let isLeftFoot = true;
-        const footOffset = 4; // 腳印與路徑的偏移量
-        const intervalTime = 400; // 每800ms產生一個腳印
+        const footOffset = 10; // 腳印與路徑的偏移量
+        const intervalTime = 400; // 每400ms產生一個腳印
         const disappearTime = 2300; // 腳印多久後開始淡出（毫秒）
 
         function createFootprint(x, y, isLeft, rotation) {
@@ -246,8 +254,8 @@
             footprint.setAttribute("href", isLeft ? "img/left-footprint.png" : "img/right-footprint.png");
             footprint.setAttribute("x", x);
             footprint.setAttribute("y", y);
-            footprint.setAttribute("width", 10);
-            footprint.setAttribute("height", 10);
+            footprint.setAttribute("width", 25);
+            footprint.setAttribute("height", 25);
             footprint.setAttribute("opacity", 1);
             footprint.setAttribute("class", "footprint");
 
@@ -283,12 +291,12 @@
             }
 
             const point = route.getPointAtLength(currentPosition);
-            const nextPoint = route.getPointAtLength(currentPosition + 10); // 預測下一步
+            const nextPoint = route.getPointAtLength(currentPosition + 5); // 預測下一步
 
             let angle = Math.atan2(nextPoint.y - point.y, nextPoint.x - point.x) * (180 / Math.PI);
 
             // 偵測轉彎
-            const furtherPoint = route.getPointAtLength(currentPosition + 20);
+            const furtherPoint = route.getPointAtLength(currentPosition + 25);
             let nextAngle = Math.atan2(furtherPoint.y - nextPoint.y, furtherPoint.x - nextPoint.x) * (180 / Math.PI);
 
             let angleDifference = nextAngle - angle;
@@ -305,7 +313,7 @@
             let leftY = point.y - offsetY;
             let rightX = point.x + offsetX;
             let rightY = point.y + offsetY;
-            let deviation = angle >= 90 ? 12 : 5;
+            let deviation = angle >= 90 ? 5 : 12;
 
             if (isLeftFoot) {
                 createFootprint(leftX - deviation, leftY - deviation, true, angle);
@@ -314,7 +322,7 @@
             }
 
             isLeftFoot = !isLeftFoot;
-            currentPosition += 10;
+            currentPosition += 25;
         }
 
         //#endregion
