@@ -33,14 +33,13 @@
                     height="2160" />
 
                 <!-- 路線 -->
-                <path id="route" fill="transparent" stroke="black" stroke-width="2"
-                    d="M960 2020 L960 460 L860 430" visibility="hidden" />
+                <path id="route" fill="transparent" stroke="black" stroke-width="2" d="" visibility="hidden" />
 
                 <!-- 定義向下的弧形路徑 -->
                 <defs>
                     <!-- 從左到右，弧形向下 -->
                     <path id="arcPathDown" d="M840,1942 A300,400 0 0,0 1080,1942" fill="transparent" />
-                    <path id="motionPath" d="M0 0 L0 -1550 L-120 -1600" fill="transparent" />
+                    <path id="motionPath" d="" fill="transparent" />
                 </defs>
                 <g id="ribbonGroup">
                     <!-- 前景圖片 -->
@@ -54,7 +53,7 @@
                         </textPath>
                     </text>
                     <!-- 沿路線移動動畫 -->
-                    <animateMotion id="motionAnim" dur="20s" repeatCount="indefinite" begin="indefinite">
+                    <animateMotion id="motionAnim" dur="20s" repeatCount="1" begin="indefinite" fill="freeze">
                         <mpath href="#motionPath" />
                     </animateMotion>
                 </g>
@@ -62,14 +61,15 @@
             </svg>
 
             <div class="line-vertical"></div>
-            <img id="Gryffindor" class="colleges" style="left:93px" src="https://i.meee.com.tw/TdIjOoA.png"
-                alt="Gryffindor">
+
+            <img id="Slytherin" class="colleges" style="left:93px" src="https://i.meee.com.tw/z6jyuTN.png"
+                alt="Slytherin">
             <img id="Hufflepuff" class="colleges" style="left:276px" src="https://i.meee.com.tw/KSE8csC.png"
                 alt="Hufflepuff">
-            <img id="Ravenclaw" class="colleges" style="left:553px" src="https://i.meee.com.tw/zmxSXuE.png"
+            <img id="Gryffindor" class="colleges" style="left:553px" src="https://i.meee.com.tw/TdIjOoA.png"
+                alt="Gryffindor">
+            <img id="Ravenclaw" class="colleges" style="left:735px" src="https://i.meee.com.tw/zmxSXuE.png"
                 alt="Ravenclaw">
-            <img id="Slytherin" class="colleges" style="left:735px" src="https://i.meee.com.tw/z6jyuTN.png"
-                alt="Slytherin">
             <img id="door-left" class="door" style="left:360px" src="https://i.meee.com.tw/EhK8iZB.png">
             <img id="door-right" class="door" style="left:490px" src="https://i.meee.com.tw/EhK8iZB.png">
             <!-- <img id="door-font" class="door-font" src="https://i.meee.com.tw/ZNb98qo.png"> -->
@@ -77,7 +77,7 @@
     </div>
 
     <script>
-        var colleges = ["Gryffindor", "Hufflepuff", "Ravenclaw", "Slytherin"];
+        var colleges = ["Slytherin", "Hufflepuff", "Gryffindor", "Ravenclaw"];
         var baseTop = {
             "Gryffindor": 75,
             "Hufflepuff": 75,
@@ -90,7 +90,9 @@
         // 要檢查的圖片清單
         const requiredImages = [
             "https://i.meee.com.tw/pFhTRSj.png",
-            "https://i.meee.com.tw/cNimNcK.jpg"
+            "https://i.meee.com.tw/cNimNcK.jpg",
+            "img/left-footprint.png",
+            "img/right-footprint.png"
         ];
 
         let loadedCount = 0;
@@ -131,10 +133,8 @@
             // 當螢幕方向改變時檢查
             window.addEventListener("orientationchange", checkOrientation);
             window.addEventListener("resize", checkOrientation);
-            
-            //for test
-            //setInterval(updateFootprints, intervalTime);
-            //$(".scene").css("overflow-y", "auto");
+
+
 
             //封面翻頁
             $(".scene").on("click", function () {
@@ -200,19 +200,11 @@
                                 $('.ribbon').css({
                                     "opacity": "1"
                                 });
+
                             }, colleges.length * 500 + 1500 + 5000);
 
                             setTimeout(function () {
-                                const anim = document.getElementById('motionAnim');
-                                // 動態算 dur
-                                const pathLength = route.getTotalLength();
-                                let steps = pathLength / 25;
-                                let totalTime = steps * intervalTime + 250; 
-                                anim.setAttribute("dur", (totalTime / 1000) + "s");
-                                anim.beginElement(); // 啟動動畫
-                                // 設定間隔，定期更新腳印位置
-                                setInterval(updateFootprints, intervalTime);
-
+                                setInterval(updateFootprints, intervalTime); // 設定間隔，定期更新腳印位置
                             }, colleges.length * 500 + 1500 + 8000);
 
                         }
@@ -221,13 +213,13 @@
             });
 
 
-            // let seatId = getSeatIdFromURL();
-            // if (seatId) {
-            //     document.getElementById("seat-info").innerText = `你的座位號碼是：${seatId}`;
-            //     // 這裡可以調用 onScanQRCode(seatId) 來顯示動線
-            // } else {
-            //     document.getElementById("seat-info").innerText = "無效的座位";
-            // }
+            let seatId = getSeatIdFromURL();
+            if (seatId) {
+                onScanQRCode(seatId);
+            }
+            //for test
+            // setInterval(updateFootprints, intervalTime);
+            // $(".scene").css("overflow-y", "auto");
 
             // 測試用：模擬掃描到 seat-1
             // setTimeout(() => {
@@ -237,17 +229,24 @@
         });
 
 
-        //#region 腳印相關
-
-        // 設定路徑點
+        //#region 腳印相關（已修正：同步 ribbon / pause / restart 邏輯）
         const route = document.getElementById('route');
         const svg = document.getElementById('svgCanvas');
-        // 設定腳印動畫
+        const motionPath = document.getElementById('motionPath');
+        const motionAnim = document.getElementById('motionAnim');
+        const ribbonGroup = document.getElementById("ribbonGroup"); // 取得 ribbon group
+        
         let currentPosition = 0;
         let isLeftFoot = true;
         const footOffset = 10; // 腳印與路徑的偏移量
         const intervalTime = 400; // 每400ms產生一個腳印
         const disappearTime = 2300; // 腳印多久後開始淡出（毫秒）
+
+        // 新增狀態控制變數
+        let isAnimatingRibbon = false;   // ribbon 是否正在播放
+        let waitingRestart = false;      // 是否在 3 秒等待期
+        let cycleTimeoutId = null;       // ribbon 完成的 timeout id
+        let restartTimeoutId = null;     // 3 秒等待期的 timeout id
 
         function createFootprint(x, y, isLeft, rotation) {
             let footprint = document.createElementNS("http://www.w3.org/2000/svg", "image");
@@ -259,51 +258,93 @@
             footprint.setAttribute("opacity", 1);
             footprint.setAttribute("class", "footprint");
 
-            // 設置旋轉角度
-            footprint.setAttribute("transform", `rotate(${rotation}, ${x + 8}, ${y + 8})`);
+            // 設置旋轉角度（以圖片中心為旋轉點）
+            footprint.setAttribute("transform", `rotate(${rotation}, ${x + 12.5}, ${y + 12.5})`);
 
             svg.appendChild(footprint);
 
-            // 設定計時器，讓腳印在一段時間後淡出
+            // 設定計時器，讓腳印在一段時間後淡出並移除
             setTimeout(() => {
+                footprint.style.transition = "opacity 1s";
                 footprint.style.opacity = 0;
                 setTimeout(() => {
-                    svg.removeChild(footprint); // 完全消失後刪除
+                    if (svg.contains(footprint)) svg.removeChild(footprint);
                 }, 1000);
             }, disappearTime);
         }
 
-        // 設置淡入淡出的函數
-        function fadeInOut(footprint, isVisible) {
-            if (isVisible) {
-                footprint.setAttribute('opacity', 1);  // 淡入
-                footprint.setAttribute('visibility', 'visible');
-            } else {
-                footprint.setAttribute('opacity', 0);  // 淡出
-                footprint.setAttribute('visibility', 'hidden');
-            }
+        // 啟動一個新的循環（包含：重置位置、設定 ribbon dur、開始 ribbon，並在 ribbon 結束後進入 3 秒等待）
+        function startCycle() {
+            if (isAnimatingRibbon || waitingRestart) return; // 已在播放或等待中就跳過
+            const pathLength = route.getTotalLength();
+            if (!pathLength || pathLength <= 0) return;
+
+            // 重新顯示 ribbon
+            ribbonGroup.style.display = "block";
+            ribbonGroup.removeAttribute("transform");  // 清掉上次 freeze 停留的 transform
+            // 重置參數
+            currentPosition = 0;
+            isLeftFoot = true;
+
+            // 計算 dur（和腳印步調一致）
+            const steps = Math.max(1, Math.ceil(pathLength / 25));
+            const totalTime = steps * intervalTime; // 毫秒
+            motionAnim.setAttribute("dur", (totalTime / 1000) + "s");
+
+            // 啟動 ribbon
+            isAnimatingRibbon = true;
+            motionAnim.beginElement();
+            //console.log("startCycle: begin ribbon, dur(ms) =", totalTime);
+
+            // 清除舊的 timeout（保險）
+            if (cycleTimeoutId) clearTimeout(cycleTimeoutId);
+            if (restartTimeoutId) clearTimeout(restartTimeoutId);
+
+            // 當 ribbon 演完後，轉為等待狀態（3 秒），再允許下一輪 startCycle()
+            cycleTimeoutId = setTimeout(() => {
+                isAnimatingRibbon = false;
+                waitingRestart = true;
+                //console.log("ribbon finished -> waiting 3s before restart");
+                
+                // 3 秒後結束等待並自動啟動下一輪
+                restartTimeoutId = setTimeout(() => {
+                    waitingRestart = false;
+                    //console.log("waiting finished -> start next cycle");
+                    startCycle();
+                }, 3000);
+            }, totalTime + 50); // 加一點 buffer 確保 SMIL 已完成
         }
 
+        // 每個 interval 呼叫：只在 ribbon 播放時才製造腳印；在等待期中完全跳過
         function updateFootprints() {
             const pathLength = route.getTotalLength();
-            if (currentPosition > pathLength) {
-                currentPosition = 0;  // 重置位置
+            if (!pathLength || pathLength <= 0) return;
+
+            // 如果正在等待重啟（3 秒），不做任何事
+            if (waitingRestart) return;
+
+            // 如果 ribbon 尚未啟動（第一次或上一輪結束），啟動一輪，但不在同一 tick 產生腳印（下個 interval 開始）
+            if (!isAnimatingRibbon) {
+                startCycle();
+                return;
             }
 
-            const point = route.getPointAtLength(currentPosition);
-            const nextPoint = route.getPointAtLength(currentPosition + 5); // 預測下一步
+            // 如果在播放中，產生腳印
+            // 防止 getPointAtLength 超過 path 長度
+            const safePos = Math.min(currentPosition, pathLength);
+            const safeNext = Math.min(currentPosition + 5, pathLength);
+
+            const point = route.getPointAtLength(safePos);
+            const nextPoint = route.getPointAtLength(safeNext); // 預測下一步
 
             let angle = Math.atan2(nextPoint.y - point.y, nextPoint.x - point.x) * (180 / Math.PI);
 
-            // 偵測轉彎
-            const furtherPoint = route.getPointAtLength(currentPosition + 25);
+            // 偵測轉彎（平滑角度）
+            const furtherPoint = route.getPointAtLength(Math.min(currentPosition + 20, pathLength));
             let nextAngle = Math.atan2(furtherPoint.y - nextPoint.y, furtherPoint.x - nextPoint.x) * (180 / Math.PI);
-
             let angleDifference = nextAngle - angle;
-
-            // 轉彎時，調整旋轉角度
             if (Math.abs(angleDifference) > 10) {
-                angle += angleDifference / 2; // 平滑過渡
+                angle += angleDifference / 2;
             }
 
             let offsetX = Math.cos((angle + 90) * Math.PI / 180) * footOffset;
@@ -323,8 +364,14 @@
 
             isLeftFoot = !isLeftFoot;
             currentPosition += 25;
-        }
 
+            // 到尾端時，把位置 cap 在 pathLength，下一次會由 startCycle 的 timeout 轉入 waitingRestart
+            if (currentPosition > pathLength - 24) {
+                currentPosition = pathLength - 24;
+                // ribbon 消失
+                // ribbonGroup.style.display = "none";
+            }
+        }
         //#endregion
 
         // 取得 URL 參數
@@ -333,23 +380,48 @@
             return params.get("id"); // 取得 ?id=xxx 的值
         }
 
-        // 模擬掃描 QR Code，實際應用可以用 qrcode.js 或後端 API 讀取
+        // 模擬掃描 QR Code
         function onScanQRCode(seatId) {
-            let entrance = { x: 50, y: 50 }; // 門口座標
-            let seat = document.getElementById(seatId);
+            let seat = seatId.split("");
+            let routeX = 0, routeY = 0;
 
-            if (!seat) {
+            if (seat.length != 2) {
                 alert("座位不存在！");
                 return;
             }
+            let college = seat[0];
+            let tableNo = seat[1];
 
-            // 取得座位座標
-            let seatX = seat.getAttribute("cx");
-            let seatY = seat.getAttribute("cy");
+            switch (seat[0]) {
+                case "S":
+                    break;
+                case "H":
+                    break;
+                case "G":
+                    break;
+                case "R":
+                    break;
+                default:
+                    break;
+            }
 
-            // 繪製路徑
-            let pathLine = document.getElementById("path-line");
-            pathLine.setAttribute("points", `${entrance.x},${entrance.y} ${seatX},${seatY}`);
+
+            routeY = 460 + (tableNo - 1) * 220;
+
+            if (tableNo > 4) {
+                routeY += 130;
+            }
+            route.setAttribute("d", `M960 2020 L960 ${routeY} L860 ${routeY - 30}`);
+            motionPath.setAttribute("d", `M0 0 L0 ${routeY - 2020} L-120 ${routeY - 2020 - 30}`);
+
+            // 動態算 dur
+            const pathLength = route.getTotalLength();
+            let steps = pathLength / 25;
+            let totalTime = steps * intervalTime;
+
+            motionAnim.setAttribute("dur", (totalTime / 1000) + "s");
+            //console.log(totalTime);
+
         }
 
         //漂浮效果
