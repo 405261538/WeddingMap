@@ -337,11 +337,16 @@
             const point = route.getPointAtLength(safePos);
             const nextPoint = route.getPointAtLength(safeNext); // 預測下一步
 
-            let angle = Math.atan2(nextPoint.y - point.y, nextPoint.x - point.x) * (180 / Math.PI);
+            let angle = Math.atan2(Math.round(nextPoint.y) - Math.round(point.y), 
+                                   Math.round(nextPoint.x) - Math.round(point.x)) 
+                                   * (180 / Math.PI);
 
             // 偵測轉彎（平滑角度）
             const furtherPoint = route.getPointAtLength(Math.min(currentPosition + 20, pathLength));
-            let nextAngle = Math.atan2(furtherPoint.y - nextPoint.y, furtherPoint.x - nextPoint.x) * (180 / Math.PI);
+            let nextAngle = Math.atan2(Math.round(furtherPoint.y) - Math.round(nextPoint.y), 
+                                       Math.round(furtherPoint.x) - Math.round(nextPoint.x)) 
+                                       * (180 / Math.PI);
+            // nextAngle = nextAngle < -90 ? -90 : nextAngle;
             let angleDifference = nextAngle - angle;
             if (Math.abs(angleDifference) > 10) {
                 angle += angleDifference / 2;
@@ -383,7 +388,8 @@
         // 模擬掃描 QR Code
         function onScanQRCode(seatId) {
             let seat = seatId.split("");
-            let routeX = 0, routeY = 0;
+            let routeX = 0, routeY = 0, motionX = 0, motionY = 0;
+            const originX = 960, originY = 2020;
 
             if (seat.length != 2) {
                 alert("座位不存在！");
@@ -392,35 +398,42 @@
             let college = seat[0];
             let tableNo = seat[1];
 
+            
+            routeY = 460 + (tableNo - 1) * 220;
+
+            if (tableNo > 4) routeY += 130;
+
+            motionY = routeY - originY;
+
             switch (seat[0]) {
                 case "S":
+                    routeX = originX - 820;
+                    motionX = -840;
+                    route.setAttribute("d", `M${originX} ${originY} L${routeX} ${originY} L${routeX} ${routeY} L${routeX + 80} ${routeY - 30}`);
+                    motionPath.setAttribute("d", `M0 0 L${motionX} 0 L${motionX} ${motionY} L${motionX + 100} ${motionY - 30}`);
                     break;
                 case "H":
+                    routeX = originX - 100;
+                    motionX = -120;
+                    route.setAttribute("d", `M${originX} ${originY} L${originX} ${routeY} L${routeX} ${routeY - 30}`);
+                    motionPath.setAttribute("d", `M0 0 L0 ${motionY} L${motionX} ${motionY - 30}`);
                     break;
                 case "G":
+                    routeX = originX + 100;
+                    motionX = 120;
+                    route.setAttribute("d", `M${originX} ${originY} L${originX} ${routeY} L${routeX} ${routeY - 30}`);
+                    motionPath.setAttribute("d", `M0 0 L0 ${motionY} L${motionX} ${motionY - 30}`);
                     break;
                 case "R":
+                    routeX = originX + 820;
+                    motionX = 840;
+                    route.setAttribute("d", `M${originX} ${originY} L${routeX} ${originY} L${routeX} ${routeY} L${routeX - 80} ${routeY - 30}`);
+                    motionPath.setAttribute("d", `M0 0 L${motionX} 0 L${motionX} ${motionY} L${motionX - 100} ${motionY - 30}`);
                     break;
                 default:
                     break;
             }
 
-
-            routeY = 460 + (tableNo - 1) * 220;
-
-            if (tableNo > 4) {
-                routeY += 130;
-            }
-            route.setAttribute("d", `M960 2020 L960 ${routeY} L860 ${routeY - 30}`);
-            motionPath.setAttribute("d", `M0 0 L0 ${routeY - 2020} L-120 ${routeY - 2020 - 30}`);
-
-            // 動態算 dur
-            const pathLength = route.getTotalLength();
-            let steps = pathLength / 25;
-            let totalTime = steps * intervalTime;
-
-            motionAnim.setAttribute("dur", (totalTime / 1000) + "s");
-            //console.log(totalTime);
 
         }
 
