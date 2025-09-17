@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-TW">
 
 <head>
     <meta charset="UTF-8">
@@ -8,6 +8,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <link rel="preload" as="image" href="https://i.meee.com.tw/pFhTRSj.png">
     <link rel="stylesheet" href="styles.css">
+    <script src="guests.js"></script>
 </head>
 
 <body>
@@ -48,8 +49,7 @@
 
                     <!-- 文字沿向下弧形排列 -->
                     <text font-size="26" font-weight="bold" fill="#5C3426">
-                        <textPath href="#arcPathDown" class="ribbon" startOffset="50%" text-anchor="middle">
-                            柯承佑
+                        <textPath id="guestName" href="#arcPathDown" class="ribbon" startOffset="50%" text-anchor="middle">
                         </textPath>
                     </text>
                     <!-- 沿路線移動動畫 -->
@@ -217,14 +217,6 @@
             if (seatId) {
                 onScanQRCode(seatId);
             }
-            //for test
-            // setInterval(updateFootprints, intervalTime);
-            // $(".scene").css("overflow-y", "auto");
-
-            // 測試用：模擬掃描到 seat-1
-            // setTimeout(() => {
-            //     onScanQRCode(seatId);
-            // }, 2000);
 
         });
 
@@ -388,12 +380,16 @@
         // 模擬掃描 QR Code
         function onScanQRCode(seatId) {
             const originX = 960, originY = 2020;
+            let guest = guests.filter(g => g.id == seatId);
 
-            if (seatId.length !== 3) {
+            if (guest.length == 0) {
                 alert("座位不存在！");
+                $('#loading-screen').show();
+                $('.loader').hide();
                 return;
             }
 
+            $('#guestName').text(guest[0].name);
             const college = seatId[0];
             const tableNo = parseInt(seatId[1], 10);
 
@@ -432,8 +428,8 @@
                 mPoints.push([0, motionY]);
 
                 // 偏移 (往內 100, -30)
-                points.push([originX - 100 * sign, targetY - 30]);
-                mPoints.push([-120 * sign, motionY - 30]);
+                points.push([originX + 100 * sign, targetY - 30]);
+                mPoints.push([120 * sign, motionY - 30]);
             }
 
             // 轉成 path 字串

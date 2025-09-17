@@ -1,33 +1,173 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-TW">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WeddingMap</title>
+    <title>WeddingMapQRcode</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="guests.js"></script>
     <style>
+        html,
+        body {
+            font-family: "SimSun", "宋体", "NSimSun", "Microsoft YaHei", serif;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 50%;
+            margin: 20px auto;
+        }
+
+        th,
+        td {
+            border: 1px solid #ccc;
+            padding: 8px 12px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        td:hover {
+            background: #f0f0f0;
+        }
+
+        /* 燈箱背景 */
+        .lightbox {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 燈箱內容區塊 */
+        .lightbox-content {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            /* 由上到下排列 */
+            align-items: center;
+            /* 水平置中 */
+        }
+
+        .lightbox-content h3 {
+            margin-bottom: 20px;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 8px;
+            right: 12px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        #qrcode {
+            margin: 0 auto;
+            /* 水平置中 */
+        }
+
+        #guestDropdown {
+            width: 300px;
+            padding: 8px;
+            margin: 20px;
+        }
     </style>
 </head>
+
 <body>
-    <select id="CustName" onchange="proQRcode()">
-        <option value="1">柯XX</option>
-        <option value="2">蔡XX</option>
-        <option value="3">許XX</option>
-        <option value="4">顏XX</option>
-    </select>
-    <div id="qrcode"></div>
-<script>
+    <h2 style="text-align:center;">Guests</h2>
+    <div>
+        <input type="text" id="guestDropdown" placeholder="輸入姓名搜尋">
+    </div>
 
-    function proQRcode(){
-        let Id = $('#CustName').val(); 
-        let url = `https://405261538.github.io/WeddingMap/map.html?id=${Id}`;
+    <table id="guestTable">
+        <thead>
+        </thead>
+        <tbody>
+            <!-- 動態載入 -->
+        </tbody>
+    </table>
 
-        $('#qrcode').html('');
-        new QRCode(document.getElementById("qrcode"), url);
-    }
+    <div class="lightbox" id="lightbox">
+        <div class="lightbox-content">
+            <!-- <span class="close-btn" id="closeBtn">&times;</span> -->
+            <h3 id="guestName"></h3>
+            <div id="qrcode"></div>
+        </div>
+    </div>
 
-</script>
+    <script>
+        // 載入 guests.json
+        $(function () {
+            setGuestsGrid(guests);
 
+            // 關閉燈箱
+            $("#closeBtn, #lightbox").on("click", function (e) {
+                if (e.target.id === "lightbox" || e.target.id === "closeBtn") {
+                    $("#lightbox").hide();
+                }
+            });
+
+            $("#guestDropdown").on("input", function () {
+                let val = $(this).val().toLowerCase();
+                let filtered = guests.filter(g => g.name.includes(val));
+
+                if (val === "") {
+                    filtered = guests;
+                }
+
+                setGuestsGrid(filtered);
+            });
+
+        });
+
+
+        // 產生 QRCode 並顯示燈箱
+        function generateQR(guest) {
+            let url = `https://405261538.github.io/WeddingMap/map.html?id=${guest.id}`;
+            console.log(url);
+            $("#guestName").text(guest.name);
+            $("#qrcode").html("");
+            new QRCode(document.getElementById("qrcode"), url);
+            $("#lightbox").css("display", "flex");
+        }
+        function setGuestsGrid(data){
+            let tbody = $("#guestTable tbody");
+            let row; // 暫存一列
+
+            tbody.html('');
+            data.forEach((guest, index) => {
+                // 每 6 個開始新的一列
+                if (index % 6 === 0) {
+                    row = $("<tr>");
+                }
+
+                let cell = $("<td>").text(guest.name);
+
+                // 點擊事件
+                cell.on("click", function () {
+                    generateQR(guest);
+                });
+
+                row.append(cell);
+
+                // 如果到第 6 個或最後一筆，就 append row
+                if (index % 6 === 5 || index === data.length - 1) {
+                    tbody.append(row);
+                }
+            });
+        }
+    </script>
 </body>
+
 </html>
