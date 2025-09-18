@@ -89,8 +89,8 @@ image {
 
 .door {
     position: absolute;
-    top: 1094px;
-    width: 130px;
+    top: 1097px;
+    width: 115px;
     height: 8px;
     z-index: 1;
     opacity: 1;

@@ -26,12 +26,12 @@
                 <div class="page left"></div>
                 <div class="page right"></div>
             </div>
-            <svg id="svgCanvas" viewBox="0 0 1920 2160" class="fullscreen-background"
+            <svg id="svgCanvas" viewBox="0 0 1920 2307" class="fullscreen-background"
                 preserveAspectRatio="xMidYMid meet">
 
                 <!-- 背景圖片 -->
-                <image href="https://i.meee.com.tw/cNimNcK.jpg" class="background" x="0" y="0" width="1920"
-                    height="2160" />
+                <image href="https://i.meee.com.tw/dZiudH2.jpg" class="background" x="0" y="0" width="1920"
+                    height="2307" />
 
                 <!-- 路線 -->
                 <path id="route" fill="transparent" stroke="black" stroke-width="2" d="" visibility="hidden" />
@@ -64,14 +64,15 @@
 
             <img id="Slytherin" class="colleges" style="left:93px" src="https://i.meee.com.tw/z6jyuTN.png"
                 alt="Slytherin">
-            <img id="Hufflepuff" class="colleges" style="left:276px" src="https://i.meee.com.tw/KSE8csC.png"
+            <img id="Hufflepuff" class="colleges" style="left:284px" src="https://i.meee.com.tw/KSE8csC.png"
                 alt="Hufflepuff">
-            <img id="Gryffindor" class="colleges" style="left:553px" src="https://i.meee.com.tw/TdIjOoA.png"
+            <img id="Gryffindor" class="colleges" style="left:542px" src="https://i.meee.com.tw/TdIjOoA.png"
                 alt="Gryffindor">
             <img id="Ravenclaw" class="colleges" style="left:735px" src="https://i.meee.com.tw/zmxSXuE.png"
                 alt="Ravenclaw">
-            <img id="door-left" class="door" style="left:360px" src="https://i.meee.com.tw/EhK8iZB.png">
+            <img id="door-left" class="door" style="left:375px" src="https://i.meee.com.tw/EhK8iZB.png">
             <img id="door-right" class="door" style="left:490px" src="https://i.meee.com.tw/EhK8iZB.png">
+            <!-- <img id="chair" class="chair" style="left:490px" src="https://i.meee.com.tw/rV2UGjU.png"> -->
             <!-- <img id="door-font" class="door-font" src="https://i.meee.com.tw/ZNb98qo.png"> -->
         </div>
     </div>
@@ -90,7 +91,7 @@
         // 要檢查的圖片清單
         const requiredImages = [
             "https://i.meee.com.tw/pFhTRSj.png",
-            "https://i.meee.com.tw/cNimNcK.jpg",
+            "https://i.meee.com.tw/dZiudH2.jpg",
             "img/left-footprint.png",
             "img/right-footprint.png"
         ];
@@ -172,12 +173,9 @@
                         complete: function () {
                             // 依序顯示學院
                             colleges.forEach(function (id, index) {
-                                // 每個學院延遲 0.5 秒 * index
-                                setTimeout(function () {
-                                    $('#' + id).animate({ opacity: 1 }, 500, function () {
-                                        floatElement(id); // 顯示完成後啟動漂浮
-                                    });
-                                }, index * 500);
+                                $('#' + id).animate({ opacity: 1 }, 500, function () {
+                                    floatElement(id); // 顯示完成後啟動漂浮
+                                });
                             });
 
                             // 總延遲等學院都出現完後再捲動場景
@@ -194,7 +192,7 @@
 
                                     }
                                 );
-                            }, colleges.length * 500 + 1500);
+                            }, 500 + 1500);
 
                             setTimeout(function () {
                                 $('.ribbon').css({
