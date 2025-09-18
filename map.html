@@ -199,11 +199,11 @@
                                     "opacity": "1"
                                 });
 
-                            }, colleges.length * 500 + 1500 + 5000);
+                            }, 500 + 1500 + 5000);
 
                             setTimeout(function () {
                                 setInterval(updateFootprints, intervalTime); // 設定間隔，定期更新腳印位置
-                            }, colleges.length * 500 + 1500 + 8000);
+                            }, 500 + 1500 + 8000);
 
                         }
                     }
@@ -289,19 +289,21 @@
             // 清除舊的 timeout（保險）
             if (cycleTimeoutId) clearTimeout(cycleTimeoutId);
             if (restartTimeoutId) clearTimeout(restartTimeoutId);
-
+            
             // 當 ribbon 演完後，轉為等待狀態（3 秒），再允許下一輪 startCycle()
             cycleTimeoutId = setTimeout(() => {
                 isAnimatingRibbon = false;
                 waitingRestart = true;
                 //console.log("ribbon finished -> waiting 3s before restart");
 
+                /*
                 // 3 秒後結束等待並自動啟動下一輪
                 restartTimeoutId = setTimeout(() => {
                     waitingRestart = false;
                     //console.log("waiting finished -> start next cycle");
                     startCycle();
                 }, 3000);
+                */
             }, totalTime + 50); // 加一點 buffer 確保 SMIL 已完成
         }
 
@@ -377,7 +379,7 @@
 
         // 模擬掃描 QR Code
         function onScanQRCode(seatId) {
-            const originX = 960, originY = 2020;
+            const originX = 960, originY = 2060;
             let guest = guests.filter(g => g.id == seatId);
 
             if (guest.length == 0) {
@@ -388,26 +390,45 @@
             }
 
             $('#guestName').text(guest[0].name);
+
             const college = seatId[0];
             const tableNo = parseInt(seatId[1], 10);
+            const seatNo = parseInt(seatId[2], 10);
 
             // 計算座標 Y
-            let targetY = 460 + (tableNo - 1) * 220;
-            if (tableNo > 4) targetY += 130;
-
+            let targetY = 375 + (tableNo - 1) * 222;
+            if (tableNo > 4) targetY += 115; //4~5桌間距
+            if(seatNo == 3 || seatNo == 4) {
+                targetY += 70;
+            }
+            else if(seatNo == 5 || seatNo == 6) {
+                targetY += 140;
+            }
             // motion Y 偏移
             const motionY = targetY - originY;
 
             // S/H → 往左, G/R → 往右
             const leftSide = (college === "S" || college === "H");
+            const leftSideSeat = seatNo % 2 != 0;
             const sign = leftSide ? -1 : 1;
+            const seatSign = leftSideSeat ? 1 : -1;
+
 
             // 路線點 (svg 的絕對座標)
             let points = [[originX, originY]];
             // motionPath 點 (相對座標)
             let mPoints = [[0, 0]];
 
-            if (college === "S" || college === "R") {
+            if((college === "H" && !leftSideSeat) || (college === "G" && leftSideSeat)){
+                // 垂直線 (origin → targetY)
+                points.push([originX, targetY]);
+                mPoints.push([0, motionY]);
+
+                // 偏移 (往內 130, -30)
+                points.push([originX + 130 * seatSign, targetY - 30]);
+                mPoints.push([120 * seatSign, motionY - 30]);
+            }
+            else if((college === "S" && leftSideSeat) || (college === "R" && !leftSideSeat)){
                 // 橫線 (origin → 左右 820px)
                 points.push([originX + 820 * sign, originY]);
                 mPoints.push([840 * sign, 0]);
@@ -420,14 +441,18 @@
                 points.push([originX + 820 * sign - 80 * sign, targetY - 30]);
                 mPoints.push([840 * sign - 100 * sign, motionY - 30]);
             }
-            else if (college === "H" || college === "G") {
-                // 垂直線 (origin → targetY)
-                points.push([originX, targetY]);
-                mPoints.push([0, motionY]);
+            else{
+                // 橫線 (origin → 左右 820px)
+                points.push([originX + 445 * sign, originY]);
+                mPoints.push([445 * sign, 0]);
 
-                // 偏移 (往內 100, -30)
-                points.push([originX + 100 * sign, targetY - 30]);
-                mPoints.push([120 * sign, motionY - 30]);
+                // 垂直線 (origin → targetY)
+                points.push([originX + 445 * sign, targetY]);
+                mPoints.push([445 * sign, motionY]);
+
+                // 偏移 (往內 80, -30)
+                points.push([originX + 445 * sign + 80 * seatSign, targetY - 30]);
+                mPoints.push([445 * sign + 80 * seatSign, motionY - 30]);
             }
 
             // 轉成 path 字串
