@@ -78,11 +78,28 @@
                             height="17" preserveAspectRatio="none" />
                     </g>
                 </g>
+                <!-- 按鈕底 -->
+                <rect id="refreshBtn" x="900" y="50" rx="12" ry="12" width="120" height="50" fill="#5C3426"
+                    stroke="#5C3426" stroke-width="3" cursor="pointer" filter="url(#shadow)" visibility="hidden" />
+
+                <!-- 按鈕文字 -->
+                <text id="refreshBtnText" x="960" y="80" text-anchor="middle" alignment-baseline="middle" fill="#FFEDDD"
+                    font-size="16" font-weight="bold" pointer-events="none" visibility="hidden">
+                    再看一次
+                </text>
+
+                <!-- 陰影效果 -->
+                <defs>
+                    <filter id="shadow" x="-20%" y="-20%" width="150%" height="150%">
+                        <feDropShadow dx="2" dy="2" stdDeviation="3" flood-color="rgba(0,0,0,0.4)" />
+                    </filter>
+                </defs>
+                <image id="chair" href="https://i.meee.com.tw/rV2UGjU.png" x="730" y="1500" width="60" height="60"
+                    preserveAspectRatio="none" visibility="hidden"/>
             </svg>
 
             <div class="line-vertical"></div>
 
-            <!-- <img id="chair" class="chair" style="left:490px" src="https://i.meee.com.tw/rV2UGjU.png"> -->
             <!-- <img id="door-font" class="door-font" src="https://i.meee.com.tw/ZNb98qo.png"> -->
         </div>
     </div>
@@ -178,6 +195,7 @@
                             $(this).css("opacity", 1 - Math.abs(now) / 180);
                         },
                         complete: function () {
+                            $('.book').hide();
                             // 依序顯示學院
                             colleges.forEach(function (id, index) {
                                 $('#' + id).animate({ opacity: 1 }, 500, function () {
@@ -214,6 +232,14 @@
             if (seatId) {
                 onScanQRCode(seatId);
             }
+
+            //#region 
+            const btn = document.getElementById("refreshBtn");
+
+            btn.addEventListener("mouseup", () => {
+                location.reload()
+            });
+            //#endregion
 
         });
 
@@ -314,16 +340,19 @@
             cycleTimeoutId = setTimeout(() => {
                 isAnimatingRibbon = false;
                 waitingRestart = true;
-                //console.log("ribbon finished -> waiting 3s before restart");
 
-                /*
+                //console.log("ribbon finished -> waiting 3s before restart");
+                
+                $('#chair').attr("visibility", "");
                 // 3 秒後結束等待並自動啟動下一輪
                 restartTimeoutId = setTimeout(() => {
-                    waitingRestart = false;
+                    //waitingRestart = false;
                     //console.log("waiting finished -> start next cycle");
-                    startCycle();
+                    //startCycle();
+                    $('#refreshBtn').attr("visibility", "");
+                    $('#refreshBtnText').attr("visibility", "");
                 }, 3000);
-                */
+
             }, totalTime + 50); // 加一點 buffer 確保 SMIL 已完成
         }
 
@@ -481,6 +510,36 @@
 
             route.setAttribute("d", routeD);
             motionPath.setAttribute("d", motionD);
+            $('#refreshBtn').attr("y", targetY - 60);
+            $('#refreshBtnText').attr("y", targetY - 60 + 30);
+
+            if(college == "S" && leftSideSeat){
+                 $('#chair').attr("x", 213);
+            }
+            if(college == "S" && !leftSideSeat){
+                 $('#chair').attr("x", 388);
+            }
+            if(college == "H" && leftSideSeat){
+                 $('#chair').attr("x", 590);
+            }
+            if(college == "H" && !leftSideSeat){
+                 $('#chair').attr("x", 762);
+            }
+            if(college == "G" && leftSideSeat){
+                 $('#chair').attr("x", 1099);
+            }
+            if(college == "G" && !leftSideSeat){
+                 $('#chair').attr("x", 1271);
+            }
+            if(college == "R" && leftSideSeat){
+                 $('#chair').attr("x", 1473);
+            }
+            if(college == "R" && !leftSideSeat){
+                 $('#chair').attr("x", 1645);
+            }
+           
+            $('#chair').attr("y", targetY - 63);
+            if(leftSideSeat) mirrorSVGImage('#chair', true);
         }
 
         //漂浮效果
@@ -490,7 +549,7 @@
             const baseY = parseInt(element.getAttribute("y")); // 初始 y
             let direction = 1;  // 1=往下, -1=往上
             let offset = 0;
-            const speed = 0.2 ; // 每幀移動幅度 (隨機速度)
+            const speed = 0.2; // 每幀移動幅度 (隨機速度)
             const maxOffset = 10 + Math.random() * 5; // 最大漂浮高度 (隨機範圍)
 
             function animate() {
@@ -507,7 +566,6 @@
             requestAnimationFrame(animate);
         }
 
-
         /*檢核手機轉向*/
         function checkOrientation() {
             const overlay = document.getElementById('orientation-overlay');
@@ -520,6 +578,37 @@
                 document.body.style.overflow = "auto"; // 恢復滾動
             }
         }
+
+        /**
+         * 對 SVG image 做鏡像
+         * @param {string} selector - jQuery 選擇器，例如 '#chair'
+         * @param {boolean} horizontal - 是否水平鏡像
+         * @param {boolean} vertical - 是否垂直鏡像
+         */
+        function mirrorSVGImage(selector, horizontal = false, vertical = false) {
+            const img = $(selector);
+            let x = parseFloat(img.attr('x')) || 0;
+            let y = parseFloat(img.attr('y')) || 0;
+            let w = parseFloat(img.attr('width')) || 0;
+            let h = parseFloat(img.attr('height')) || 0;
+
+            // 鏡像中心點
+            let cx = x + w / 2;
+            let cy = y + h / 2;
+
+            let scaleX = horizontal ? -1 : 1;
+            let scaleY = vertical ? -1 : 1;
+
+            // 組合 transform
+            let transformStr = `
+                translate(${cx}, ${cy})
+                scale(${scaleX}, ${scaleY})
+                translate(${-cx}, ${-cy})
+            `;
+
+            img.attr('transform', transformStr);
+        }
+
     </script>
 
 </body>
