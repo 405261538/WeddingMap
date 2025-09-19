@@ -49,7 +49,8 @@
 
                     <!-- 文字沿向下弧形排列 -->
                     <text font-size="26" font-weight="bold" fill="#5C3426">
-                        <textPath id="guestName" href="#arcPathDown" class="ribbon" startOffset="50%" text-anchor="middle">
+                        <textPath id="guestName" href="#arcPathDown" class="ribbon" startOffset="50%"
+                            text-anchor="middle">
                         </textPath>
                     </text>
                     <!-- 沿路線移動動畫 -->
@@ -57,26 +58,35 @@
                         <mpath href="#motionPath" />
                     </animateMotion>
                 </g>
-
+                <g id="collegesGroup">
+                    <image id="Slytherin" class="colleges" href="https://i.meee.com.tw/z6jyuTN.png" x="180" y="90"
+                        width="300" height="200" opacity="0" />
+                    <image id="Hufflepuff" class="colleges" href="https://i.meee.com.tw/KSE8csC.png" x="555" y="90"
+                        width="300" height="200" opacity="0" />
+                    <image id="Gryffindor" class="colleges" href="https://i.meee.com.tw/TdIjOoA.png" x="1060" y="90"
+                        width="300" height="200" opacity="0" />
+                    <image id="Ravenclaw" class="colleges" href="https://i.meee.com.tw/zmxSXuE.png" x="1440" y="90"
+                        width="300" height="200" opacity="0" />
+                </g>
+                <g id="doorsGroup">
+                    <g id="door-left-group" transform="rotate(0, 730, 2149)">
+                        <image id="door-left" href="https://i.meee.com.tw/EhK8iZB.png" x="730" y="2149" width="227"
+                            height="17" preserveAspectRatio="none" />
+                    </g>
+                    <g id="door-right-group">
+                        <image id="door-right" href="https://i.meee.com.tw/EhK8iZB.png" x="957" y="2149" width="227"
+                            height="17" preserveAspectRatio="none" />
+                    </g>
+                </g>
             </svg>
 
             <div class="line-vertical"></div>
 
-            <img id="Slytherin" class="colleges" style="left:93px" src="https://i.meee.com.tw/z6jyuTN.png"
-                alt="Slytherin">
-            <img id="Hufflepuff" class="colleges" style="left:284px" src="https://i.meee.com.tw/KSE8csC.png"
-                alt="Hufflepuff">
-            <img id="Gryffindor" class="colleges" style="left:542px" src="https://i.meee.com.tw/TdIjOoA.png"
-                alt="Gryffindor">
-            <img id="Ravenclaw" class="colleges" style="left:735px" src="https://i.meee.com.tw/zmxSXuE.png"
-                alt="Ravenclaw">
-            <img id="door-left" class="door" style="left:375px" src="https://i.meee.com.tw/EhK8iZB.png">
-            <img id="door-right" class="door" style="left:490px" src="https://i.meee.com.tw/EhK8iZB.png">
             <!-- <img id="chair" class="chair" style="left:490px" src="https://i.meee.com.tw/rV2UGjU.png"> -->
             <!-- <img id="door-font" class="door-font" src="https://i.meee.com.tw/ZNb98qo.png"> -->
         </div>
     </div>
-
+    <button id="fullscreenButton" style="display:none">全螢幕</button>
     <script>
         var colleges = ["Slytherin", "Hufflepuff", "Gryffindor", "Ravenclaw"];
         var baseTop = {
@@ -127,7 +137,6 @@
         //#endregion
 
         $(function () {
-
             // 初始化檢查
             checkOrientation();
 
@@ -135,14 +144,12 @@
             window.addEventListener("orientationchange", checkOrientation);
             window.addEventListener("resize", checkOrientation);
 
-
-
             //封面翻頁
             $(".scene").on("click", function () {
-
                 if ($(this).data("opened")) return;
                 $(this).data("opened", true);
 
+                $('#fullscreenButton').click();
                 // 背景漸顯 & 縮回原比例
                 $(".background").css({
                     "transform": "scale(1)",
@@ -182,15 +189,7 @@
                             setTimeout(function () {
                                 $(".scene").css("overflow-y", "auto").animate(
                                     { scrollTop: $(".scene")[0].scrollHeight },
-                                    3000,
-                                    function () {
-                                        // 捲動完成後打開門
-                                        $('#door-left').css({
-                                            "transform-origin": "0% 100%",
-                                            "transform": "rotate(-15deg)"
-                                        });
-
-                                    }
+                                    3000, openDoors
                                 );
                             }, 500 + 1500);
 
@@ -218,6 +217,27 @@
 
         });
 
+        //全螢幕按鈕
+        $('#fullscreenButton').on('click', function () {
+            //綁定一個click事件避免出現錯誤
+            document.documentElement.requestFullscreen()
+                .catch(err => {
+                    console.error('無法進入全螢幕模式:', err);
+                });
+        });
+
+        function openDoors() {
+            // 左門往外開
+            $("#door-left-group").animate(
+                { deg: -15 },
+                {
+                    duration: 2000,
+                    step: function (now) {
+                        $(this).attr("transform", `rotate(${now}, 730, 2149)`);
+                    }
+                }
+            );
+        }
 
         //#region 腳印相關（已修正：同步 ribbon / pause / restart 邏輯）
         const route = document.getElementById('route');
@@ -289,7 +309,7 @@
             // 清除舊的 timeout（保險）
             if (cycleTimeoutId) clearTimeout(cycleTimeoutId);
             if (restartTimeoutId) clearTimeout(restartTimeoutId);
-            
+
             // 當 ribbon 演完後，轉為等待狀態（3 秒），再允許下一輪 startCycle()
             cycleTimeoutId = setTimeout(() => {
                 isAnimatingRibbon = false;
@@ -398,10 +418,10 @@
             // 計算座標 Y
             let targetY = 375 + (tableNo - 1) * 222;
             if (tableNo > 4) targetY += 115; //4~5桌間距
-            if(seatNo == 3 || seatNo == 4) {
+            if (seatNo == 3 || seatNo == 4) {
                 targetY += 70;
             }
-            else if(seatNo == 5 || seatNo == 6) {
+            else if (seatNo == 5 || seatNo == 6) {
                 targetY += 140;
             }
             // motion Y 偏移
@@ -419,7 +439,7 @@
             // motionPath 點 (相對座標)
             let mPoints = [[0, 0]];
 
-            if((college === "H" && !leftSideSeat) || (college === "G" && leftSideSeat)){
+            if ((college === "H" && !leftSideSeat) || (college === "G" && leftSideSeat)) {
                 // 垂直線 (origin → targetY)
                 points.push([originX, targetY]);
                 mPoints.push([0, motionY]);
@@ -428,7 +448,7 @@
                 points.push([originX + 130 * seatSign, targetY - 30]);
                 mPoints.push([120 * seatSign, motionY - 30]);
             }
-            else if((college === "S" && leftSideSeat) || (college === "R" && !leftSideSeat)){
+            else if ((college === "S" && leftSideSeat) || (college === "R" && !leftSideSeat)) {
                 // 橫線 (origin → 左右 820px)
                 points.push([originX + 820 * sign, originY]);
                 mPoints.push([840 * sign, 0]);
@@ -441,7 +461,7 @@
                 points.push([originX + 820 * sign - 80 * sign, targetY - 30]);
                 mPoints.push([840 * sign - 100 * sign, motionY - 30]);
             }
-            else{
+            else {
                 // 橫線 (origin → 左右 820px)
                 points.push([originX + 445 * sign, originY]);
                 mPoints.push([445 * sign, 0]);
@@ -463,14 +483,30 @@
             motionPath.setAttribute("d", motionD);
         }
 
-
         //漂浮效果
+        // 用 requestAnimationFrame 讓每個學院獨立漂浮
         function floatElement(id) {
-            var newTop = baseTop[id] + (Math.random() * 20 - 10); // 上下隨機漂浮 ±10px
-            $('#' + id).animate({ top: newTop }, 2000, function () {
-                floatElement(id); // 動畫完成後繼續漂浮
-            });
+            const element = document.getElementById(id);
+            const baseY = parseInt(element.getAttribute("y")); // 初始 y
+            let direction = 1;  // 1=往下, -1=往上
+            let offset = 0;
+            const speed = 0.2 ; // 每幀移動幅度 (隨機速度)
+            const maxOffset = 10 + Math.random() * 5; // 最大漂浮高度 (隨機範圍)
+
+            function animate() {
+                offset += direction * speed;
+                if (offset > maxOffset || offset < -maxOffset) {
+                    direction *= -1; // 到邊界就反向
+                }
+                element.setAttribute("y", baseY + offset);
+
+                requestAnimationFrame(animate);
+            }
+
+            // 啟動動畫
+            requestAnimationFrame(animate);
         }
+
 
         /*檢核手機轉向*/
         function checkOrientation() {
