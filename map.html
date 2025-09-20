@@ -244,7 +244,15 @@
             });
             //#endregion
 
+
+            setVh();
+            window.addEventListener('resize', setVh);
         });
+
+        function setVh() {
+            let vh = window.innerHeight * 0.01;
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
+        }
 
         //全螢幕按鈕
         $('#fullscreenButton').on('click', async function () {
