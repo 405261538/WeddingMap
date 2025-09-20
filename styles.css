@@ -232,3 +232,14 @@ image {
     opacity: 0;
     transition: transform 5s ease, opacity 5s ease;
 }
+
+/* 視覺全螢幕 fallback 的輔助樣式 */
+.fullscreen-fallback {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    background: #000; /* 或你的底色 */
+}
