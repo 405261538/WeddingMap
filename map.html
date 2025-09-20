@@ -95,7 +95,7 @@
                     </filter>
                 </defs>
                 <image id="chair" href="https://i.meee.com.tw/rV2UGjU.png" x="730" y="1500" width="60" height="60"
-                    preserveAspectRatio="none" visibility="hidden"/>
+                    preserveAspectRatio="none" visibility="hidden" />
             </svg>
 
             <div class="line-vertical"></div>
@@ -205,8 +205,11 @@
 
                             // 總延遲等學院都出現完後再捲動場景
                             setTimeout(function () {
+                                const scene = $(".scene")[0];
+                                const target = scene.scrollHeight - scene.clientHeight;
+
                                 $(".scene").css("overflow-y", "auto").animate(
-                                    { scrollTop: $(".scene")[0].scrollHeight },
+                                    { scrollTop: target },
                                     3000, openDoors
                                 );
                             }, 500 + 1500);
@@ -244,13 +247,40 @@
         });
 
         //全螢幕按鈕
-        $('#fullscreenButton').on('click', function () {
-            //綁定一個click事件避免出現錯誤
-            document.documentElement.requestFullscreen()
-                .catch(err => {
+        $('#fullscreenButton').on('click', async function () {
+            const el = document.documentElement;
+
+            // 判斷 iOS
+            const isIOS = /iP(hone|od|ad)/.test(navigator.platform) ||
+                (navigator.userAgent.includes("Mac") && "ontouchend" in document);
+
+            // 標準與前綴 API
+            const rfs = el.requestFullscreen
+                || el.webkitRequestFullscreen
+                || el.mozRequestFullScreen
+                || el.msRequestFullscreen;
+
+            if (rfs) {
+                try {
+                    await rfs.call(el);
+                    return;
+                } catch (err) {
                     console.error('無法進入全螢幕模式:', err);
-                });
+                }
+            }
+
+            // iPhone fallback：用 CSS/JS 模擬全螢幕
+            if (isIOS) {
+                //alert('iPhone 瀏覽器不支援全螢幕。\n建議：將此頁「加入主畫面」即可獲得真正全螢幕。');
+
+                // Fallback：視覺全螢幕
+                document.body.style.height = window.innerHeight + 'px';
+                document.documentElement.style.height = '100%';
+                document.documentElement.style.overflow = 'hidden';
+                document.body.classList.add('fullscreen-fallback');
+            }
         });
+
 
         function openDoors() {
             // 左門往外開
@@ -342,7 +372,7 @@
                 waitingRestart = true;
 
                 //console.log("ribbon finished -> waiting 3s before restart");
-                
+
                 $('#chair').attr("visibility", "");
                 // 3 秒後結束等待並自動啟動下一輪
                 restartTimeoutId = setTimeout(() => {
@@ -513,33 +543,33 @@
             $('#refreshBtn').attr("y", targetY - 60);
             $('#refreshBtnText').attr("y", targetY - 60 + 30);
 
-            if(college == "S" && leftSideSeat){
-                 $('#chair').attr("x", 213);
+            if (college == "S" && leftSideSeat) {
+                $('#chair').attr("x", 213);
             }
-            if(college == "S" && !leftSideSeat){
-                 $('#chair').attr("x", 388);
+            if (college == "S" && !leftSideSeat) {
+                $('#chair').attr("x", 388);
             }
-            if(college == "H" && leftSideSeat){
-                 $('#chair').attr("x", 590);
+            if (college == "H" && leftSideSeat) {
+                $('#chair').attr("x", 590);
             }
-            if(college == "H" && !leftSideSeat){
-                 $('#chair').attr("x", 762);
+            if (college == "H" && !leftSideSeat) {
+                $('#chair').attr("x", 762);
             }
-            if(college == "G" && leftSideSeat){
-                 $('#chair').attr("x", 1099);
+            if (college == "G" && leftSideSeat) {
+                $('#chair').attr("x", 1099);
             }
-            if(college == "G" && !leftSideSeat){
-                 $('#chair').attr("x", 1271);
+            if (college == "G" && !leftSideSeat) {
+                $('#chair').attr("x", 1271);
             }
-            if(college == "R" && leftSideSeat){
-                 $('#chair').attr("x", 1473);
+            if (college == "R" && leftSideSeat) {
+                $('#chair').attr("x", 1473);
             }
-            if(college == "R" && !leftSideSeat){
-                 $('#chair').attr("x", 1645);
+            if (college == "R" && !leftSideSeat) {
+                $('#chair').attr("x", 1645);
             }
-           
+
             $('#chair').attr("y", targetY - 63);
-            if(leftSideSeat) mirrorSVGImage('#chair', true);
+            if (leftSideSeat) mirrorSVGImage('#chair', true);
         }
 
         //漂浮效果
