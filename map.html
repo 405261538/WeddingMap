@@ -166,6 +166,8 @@
                 if ($(this).data("opened")) return;
                 $(this).data("opened", true);
 
+                // 停止左右頁的 wiggle 動畫
+                $(".left, .right").css("animation", "none");
                 $('#fullscreenButton').click();
                 // 背景漸顯 & 縮回原比例
                 $(".background").css({
@@ -180,7 +182,7 @@
                         duration: 5000,
                         step: function (now) {
                             $(this).css("transform", "rotateY(" + now + "deg)");
-                            $(this).css("opacity", 1 - Math.abs(now) / 180);
+                            // $(this).css("opacity", 1 - Math.abs(now) / 180);
                         }
                     }
                 );
@@ -192,7 +194,7 @@
                         duration: 5000,
                         step: function (now) {
                             $(this).css("transform", "rotateY(" + now + "deg)");
-                            $(this).css("opacity", 1 - Math.abs(now) / 180);
+                            // $(this).css("opacity", 1 - Math.abs(now) / 180);
                         },
                         complete: openMap
                     }
