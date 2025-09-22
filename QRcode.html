@@ -16,7 +16,7 @@
 
         table {
             border-collapse: collapse;
-            width: 50%;
+            width: 80%;
             margin: 20px auto;
         }
 
@@ -86,7 +86,7 @@
 
 <body>
     <h2 style="text-align:center;">Guests</h2>
-    <div>
+    <div style="display: flex; justify-content: center;">
         <input type="text" id="guestDropdown" placeholder="輸入姓名搜尋">
     </div>
 
@@ -109,7 +109,6 @@
     <script>
         // 載入 guests.json
         $(function () {
-            setGuestsGrid(guests);
 
             // 關閉燈箱
             $("#closeBtn, #lightbox").on("click", function (e) {
@@ -122,8 +121,9 @@
                 let val = $(this).val().toLowerCase();
                 let filtered = guests.filter(g => g.name.includes(val));
 
-                if (val === "") {
-                    filtered = guests;
+                if (!val) {
+                    $("#guestTable tbody").html('');
+                    return;
                 }
 
                 setGuestsGrid(filtered);
@@ -138,7 +138,11 @@
             console.log(url);
             $("#guestName").text(guest.name);
             $("#qrcode").html("");
-            new QRCode(document.getElementById("qrcode"), url);
+            new QRCode(document.getElementById("qrcode"), {
+                text: url,
+                colorDark: "#5C3426",   // 深藍色
+                colorLight: "#FFEDDD"   // 白色背景
+            });
             $("#lightbox").css("display", "flex");
         }
         function setGuestsGrid(data){
@@ -147,8 +151,8 @@
 
             tbody.html('');
             data.forEach((guest, index) => {
-                // 每 6 個開始新的一列
-                if (index % 6 === 0) {
+                // 每 3 個開始新的一列
+                if (index % 3 === 0) {
                     row = $("<tr>");
                 }
 
@@ -161,8 +165,8 @@
 
                 row.append(cell);
 
-                // 如果到第 6 個或最後一筆，就 append row
-                if (index % 6 === 5 || index === data.length - 1) {
+                // 如果到第 3 個或最後一筆，就 append row
+                if (index % 3 === 2 || index === data.length - 1) {
                     tbody.append(row);
                 }
             });
