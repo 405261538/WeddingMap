@@ -12,7 +12,9 @@
 </head>
 
 <body>
-
+    <div id="Patronus-Charm" style="display: none;">
+        <div>You are a muggle!!!</div>
+    </div>
     <div id="loading-screen">
         <div class="loader">載入中...</div>
     </div>
@@ -22,7 +24,7 @@
     </div>
     <div id="page-content" style="display:none;">
         <div class="scene">
-            <div class="book">
+            <div class="map">
                 <div class="page left"></div>
                 <div class="page right"></div>
             </div>
@@ -103,15 +105,13 @@
             <!-- <img id="door-font" class="door-font" src="https://i.meee.com.tw/ZNb98qo.png"> -->
         </div>
     </div>
-    <button id="fullscreenButton" style="display:none">全螢幕</button>
+    <button id="fullscreenButton" style="display:none"></button>
     <script>
-        var colleges = ["Slytherin", "Hufflepuff", "Gryffindor", "Ravenclaw"];
-        var baseTop = {
-            "Gryffindor": 75,
-            "Hufflepuff": 75,
-            "Ravenclaw": 75,
-            "Slytherin": 75
-        };
+        const refreshBtn = $('#refreshBtn');
+        const refreshBtnText = $('#refreshBtnText');
+        const chair = $('#chair');
+        const colleges = ["Slytherin", "Hufflepuff", "Gryffindor", "Ravenclaw"];
+        let isLoop = false;
 
         //#region 圖片載入檢核
 
@@ -194,65 +194,21 @@
                             $(this).css("transform", "rotateY(" + now + "deg)");
                             $(this).css("opacity", 1 - Math.abs(now) / 180);
                         },
-                        complete: function () {
-                            $('.book').hide();
-                            // 依序顯示學院
-                            colleges.forEach(function (id, index) {
-                                $('#' + id).animate({ opacity: 1 }, 500, function () {
-                                    floatElement(id); // 顯示完成後啟動漂浮
-                                });
-                            });
-
-                            // 總延遲等學院都出現完後再捲動場景
-                            setTimeout(function () {
-                                const scene = $(".scene")[0];
-                                const target = scene.scrollHeight - scene.clientHeight;
-
-                                $(".scene").css("overflow-y", "auto").animate(
-                                    { scrollTop: target },
-                                    3000, openDoors
-                                );
-                            }, 500 + 1500);
-
-                            setTimeout(function () {
-                                $('.ribbon').css({
-                                    "opacity": "1"
-                                });
-
-                            }, 500 + 1500 + 5000);
-
-                            setTimeout(function () {
-                                setInterval(updateFootprints, intervalTime); // 設定間隔，定期更新腳印位置
-                            }, 500 + 1500 + 8000);
-
-                        }
+                        complete: openMap
                     }
                 );
             });
-
 
             let seatId = getSeatIdFromURL();
             if (seatId) {
                 onScanQRCode(seatId);
             }
 
-            //#region 
-            const btn = document.getElementById("refreshBtn");
-
-            btn.addEventListener("mouseup", () => {
+            //綁定refreshBtn mouseup事件
+            refreshBtn.on('mouseup', () => {
                 location.reload()
             });
-            //#endregion
-
-
-            setVh();
-            window.addEventListener('resize', setVh);
         });
-
-        function setVh() {
-            let vh = window.innerHeight * 0.01;
-            document.documentElement.style.setProperty('--vh', `${vh}px`);
-        }
 
         //全螢幕按鈕
         $('#fullscreenButton').on('click', async function () {
@@ -279,8 +235,6 @@
 
             // iPhone fallback：用 CSS/JS 模擬全螢幕
             if (isIOS) {
-                //alert('iPhone 瀏覽器不支援全螢幕。\n建議：將此頁「加入主畫面」即可獲得真正全螢幕。');
-
                 // Fallback：視覺全螢幕
                 document.body.style.height = window.innerHeight + 'px';
                 document.documentElement.style.height = '100%';
@@ -289,6 +243,38 @@
             }
         });
 
+
+        function openMap() {
+            $('.map').hide();
+            // 依序顯示學院
+            colleges.forEach(function (id, index) {
+                $('#' + id).animate({ opacity: 1 }, 500, function () {
+                    floatElement(id); // 顯示完成後啟動漂浮
+                });
+            });
+
+            // 總延遲等學院都出現完後再捲動場景
+            setTimeout(function () {
+                const scene = $(".scene")[0];
+                const target = scene.scrollHeight - scene.clientHeight;
+
+                $(".scene").css("overflow-y", "auto").animate(
+                    { scrollTop: target },
+                    3000, openDoors
+                );
+            }, 500 + 1500);
+
+            setTimeout(function () {
+                $('.ribbon').css({
+                    "opacity": "1"
+                });
+
+            }, 500 + 1500 + 5000);
+
+            setTimeout(function () {
+                setInterval(updateFootprints, intervalTime); // 設定間隔，定期更新腳印位置
+            }, 500 + 1500 + 8000);
+        }
 
         function openDoors() {
             // 左門往外開
@@ -381,14 +367,19 @@
 
                 //console.log("ribbon finished -> waiting 3s before restart");
 
-                $('#chair').attr("visibility", "");
+                chair.attr("visibility", "");
                 // 3 秒後結束等待並自動啟動下一輪
                 restartTimeoutId = setTimeout(() => {
-                    //waitingRestart = false;
-                    //console.log("waiting finished -> start next cycle");
-                    //startCycle();
-                    $('#refreshBtn').attr("visibility", "");
-                    $('#refreshBtnText').attr("visibility", "");
+                    if (isLoop) {
+                        waitingRestart = false;
+                        //console.log("waiting finished -> start next cycle");
+                        startCycle();
+                    }
+                    else {
+                        refreshBtn.attr("visibility", "");
+                        refreshBtnText.attr("visibility", "");
+                    }
+
                 }, 3000);
 
             }, totalTime + 50); // 加一點 buffer 確保 SMIL 已完成
@@ -425,7 +416,6 @@
             let nextAngle = Math.atan2(Math.round(furtherPoint.y) - Math.round(nextPoint.y),
                 Math.round(furtherPoint.x) - Math.round(nextPoint.x))
                 * (180 / Math.PI);
-            // nextAngle = nextAngle < -90 ? -90 : nextAngle;
             let angleDifference = nextAngle - angle;
             if (Math.abs(angleDifference) > 10) {
                 angle += angleDifference / 2;
@@ -452,8 +442,6 @@
             // 到尾端時，把位置 cap 在 pathLength，下一次會由 startCycle 的 timeout 轉入 waitingRestart
             if (currentPosition > pathLength - 24) {
                 currentPosition = pathLength - 24;
-                // ribbon 消失
-                // ribbonGroup.style.display = "none";
             }
         }
         //#endregion
@@ -466,45 +454,57 @@
 
         // 模擬掃描 QR Code
         function onScanQRCode(seatId) {
-            const originX = 960, originY = 2060;
-            let guest = guests.filter(g => g.id == seatId);
+            let guest = guests.find(g => g.id == seatId);
 
-            if (guest.length == 0) {
-                alert("座位不存在！");
-                $('#loading-screen').show();
-                $('.loader').hide();
+            if (!guest) {
+                $('#Patronus-Charm').show();
                 return;
             }
 
-            $('#guestName').text(guest[0].name);
+            $('#guestName').text(guest.name);
 
+            setPath(seatId);
+        }
+
+        function setPath(seatId) {
             const college = seatId[0];
             const tableNo = parseInt(seatId[1], 10);
             const seatNo = parseInt(seatId[2], 10);
-
-            // 計算座標 Y
-            let targetY = 375 + (tableNo - 1) * 222;
-            if (tableNo > 4) targetY += 115; //4~5桌間距
-            if (seatNo == 3 || seatNo == 4) {
-                targetY += 70;
-            }
-            else if (seatNo == 5 || seatNo == 6) {
-                targetY += 140;
-            }
-            // motion Y 偏移
-            const motionY = targetY - originY;
-
-            // S/H → 往左, G/R → 往右
-            const leftSide = (college === "S" || college === "H");
+            const leftSide = (college === "S" || college === "H"); // S/H → 往左, G/R → 往右
             const leftSideSeat = seatNo % 2 != 0;
+            let targetY = calTargetY(tableNo, seatNo);
+
+            setRoute(college, targetY, leftSide, leftSideSeat);
+            setChair(college, targetY, leftSideSeat);
+            refreshBtn.attr("y", targetY - 60);
+            refreshBtnText.attr("y", targetY - 60 + 30);
+        }
+
+        function calTargetY(tableNo, seatNo) {
+            let result = 375; //1桌1、2位置高度
+
+            //計算位置間距
+            if (seatNo >= 5) {
+                result += 140;
+            }
+            else if (seatNo >= 3) {
+                result += 70;
+            }
+
+            //計算桌子間距
+            result += (tableNo - 1) * 222
+            if (tableNo > 4) result += 115; //4~5桌走道間距
+
+            return result;
+        }
+
+        function setRoute(college, targetY, leftSide, leftSideSeat) {
+            const originX = 960, originY = 2060;
+            const motionY = targetY - originY; // motion Y 偏移
+            let points = [[originX, originY]]; // 路線點 (svg 的絕對座標)
+            let mPoints = [[0, 0]]; // motionPath 點 (相對座標)
             const sign = leftSide ? -1 : 1;
             const seatSign = leftSideSeat ? 1 : -1;
-
-
-            // 路線點 (svg 的絕對座標)
-            let points = [[originX, originY]];
-            // motionPath 點 (相對座標)
-            let mPoints = [[0, 0]];
 
             if ((college === "H" && !leftSideSeat) || (college === "G" && leftSideSeat)) {
                 // 垂直線 (origin → targetY)
@@ -548,73 +548,27 @@
 
             route.setAttribute("d", routeD);
             motionPath.setAttribute("d", motionD);
-            $('#refreshBtn').attr("y", targetY - 60);
-            $('#refreshBtnText').attr("y", targetY - 60 + 30);
+        }
 
-            if (college == "S" && leftSideSeat) {
-                $('#chair').attr("x", 213);
+        function setChair(college, targetY, leftSideSeat) {
+            let chairX = 0;
+
+            if (college == "S") {
+                chairX = leftSideSeat ? 213 : 388;
             }
-            if (college == "S" && !leftSideSeat) {
-                $('#chair').attr("x", 388);
+            if (college == "H") {
+                chairX = leftSideSeat ? 590 : 762;
             }
-            if (college == "H" && leftSideSeat) {
-                $('#chair').attr("x", 590);
+            if (college == "G") {
+                chairX = leftSideSeat ? 1099 : 1271;
             }
-            if (college == "H" && !leftSideSeat) {
-                $('#chair').attr("x", 762);
-            }
-            if (college == "G" && leftSideSeat) {
-                $('#chair').attr("x", 1099);
-            }
-            if (college == "G" && !leftSideSeat) {
-                $('#chair').attr("x", 1271);
-            }
-            if (college == "R" && leftSideSeat) {
-                $('#chair').attr("x", 1473);
-            }
-            if (college == "R" && !leftSideSeat) {
-                $('#chair').attr("x", 1645);
+            if (college == "R") {
+                chairX = leftSideSeat ? 1473 : 1645;
             }
 
-            $('#chair').attr("y", targetY - 63);
+            chair.attr("x", chairX);
+            chair.attr("y", targetY - 63);
             if (leftSideSeat) mirrorSVGImage('#chair', true);
-        }
-
-        //漂浮效果
-        // 用 requestAnimationFrame 讓每個學院獨立漂浮
-        function floatElement(id) {
-            const element = document.getElementById(id);
-            const baseY = parseInt(element.getAttribute("y")); // 初始 y
-            let direction = 1;  // 1=往下, -1=往上
-            let offset = 0;
-            const speed = 0.2; // 每幀移動幅度 (隨機速度)
-            const maxOffset = 10 + Math.random() * 5; // 最大漂浮高度 (隨機範圍)
-
-            function animate() {
-                offset += direction * speed;
-                if (offset > maxOffset || offset < -maxOffset) {
-                    direction *= -1; // 到邊界就反向
-                }
-                element.setAttribute("y", baseY + offset);
-
-                requestAnimationFrame(animate);
-            }
-
-            // 啟動動畫
-            requestAnimationFrame(animate);
-        }
-
-        /*檢核手機轉向*/
-        function checkOrientation() {
-            const overlay = document.getElementById('orientation-overlay');
-
-            if (window.matchMedia("(orientation: portrait)").matches) {
-                overlay.classList.add("show"); // 顯示遮罩 (淡入)
-                document.body.style.overflow = "hidden"; // 禁止滾動
-            } else {
-                overlay.classList.remove("show"); // 隱藏遮罩 (淡出)
-                document.body.style.overflow = "auto"; // 恢復滾動
-            }
         }
 
         /**
@@ -645,6 +599,46 @@
             `;
 
             img.attr('transform', transformStr);
+        }
+
+        //漂浮效果
+        function floatElement(id) {
+            const element = document.getElementById(id);
+            const baseY = parseInt(element.getAttribute("y")); // 初始 y
+            let direction = 1;  // 1=往下, -1=往上
+            let offset = 0;
+            const speed = 0.2; // 每幀移動幅度 (隨機速度)
+            const maxOffset = 10 + Math.random() * 5; // 最大漂浮高度 (隨機範圍)
+
+            function animate() {
+                offset += direction * speed;
+                if (offset > maxOffset || offset < -maxOffset) {
+                    direction *= -1; // 到邊界就反向
+                }
+                element.setAttribute("y", baseY + offset);
+
+                // 用 requestAnimationFrame 讓每個學院獨立漂浮
+                requestAnimationFrame(animate);
+            }
+
+            // 啟動動畫
+            requestAnimationFrame(animate);
+        }
+
+        /*檢核手機轉向*/
+        function checkOrientation() {
+            const overlay = document.getElementById('orientation-overlay');
+
+            if (window.matchMedia("(orientation: portrait)").matches) {
+                overlay.classList.add("show"); // 顯示遮罩 (淡入)
+                document.body.style.overflow = "hidden"; // 禁止滾動
+            } else {
+                overlay.classList.remove("show"); // 隱藏遮罩 (淡出)
+                document.body.style.overflow = "auto"; // 恢復滾動
+            }
+
+            let vh = window.innerHeight * 0.01;
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
         }
 
     </script>
