@@ -35,18 +35,16 @@
                 <image href="https://i.meee.com.tw/dZiudH2.jpg" class="background" x="0" y="0" width="1920"
                     height="2307" />
 
-                <!-- 路線 -->
-                <path id="route" fill="transparent" stroke="black" stroke-width="2" d="" visibility="hidden" />
-
-                <!-- 定義向下的弧形路徑 -->
                 <defs>
-                    <!-- 從左到右，弧形向下 -->
-                    <path id="arcPathDown" d="M840,1942 A300,400 0 0,0 1080,1942" fill="transparent" />
-                    <path id="motionPath" d="" fill="transparent" />
+                    <!-- 路線 -->
+                    <path id="route" fill="transparent" stroke="black" stroke-width="2" d="" visibility="hidden" />
+                    <!--定義向下的弧形路徑 從左到右，弧形向下 -->
+                    <path id="arcPathDown" d="M840,1967 A300,400 0 0,0 1080,1967" fill="transparent" />
+                    <path id="motionPath" fill="transparent" stroke="black" stroke-width="2" d="" visibility="hidden" />
                 </defs>
                 <g id="ribbonGroup">
                     <!-- 前景圖片 -->
-                    <image href="https://i.meee.com.tw/5VqdeNQ.png" class="ribbon" x="860" y="1900" width="200"
+                    <image href="https://i.meee.com.tw/5VqdeNQ.png" class="ribbon" x="860" y="1925" width="200"
                         height="100" />
 
                     <!-- 文字沿向下弧形排列 -->
@@ -58,6 +56,29 @@
                     <!-- 沿路線移動動畫 -->
                     <animateMotion id="motionAnim" dur="20s" repeatCount="1" begin="indefinite" fill="freeze">
                         <mpath href="#motionPath" />
+                    </animateMotion>
+                </g>
+                <defs>
+                    <!-- 路線 -->
+                    <path id="npc" fill="transparent" stroke="blue" stroke-width="2" d="M100,2100 L100,500" visibility="hidden" />
+                    <path id="npcArcPathDown" d="M120,1967 A300,400 0 0,0 460,1967" fill="transparent" />
+                    <path id="npcMotionPath" fill="transparent" stroke="black" stroke-width="2" d="M0 0 L0 -1600" 
+                        visibility="hidden" />
+                </defs>
+                <g id="npcRibbonGroup">
+                    <!-- 前景圖片 -->
+                    <image href="https://i.meee.com.tw/5VqdeNQ.png" x="100" y="1925" width="200"
+                        height="100" />
+
+                    <!-- 文字沿向下弧形排列 -->
+                    <text font-size="26" font-weight="bold" fill="#5C3426">
+                        <textPath id="npcName" href="#npcArcPathDown" startOffset="50%" text-anchor="middle">
+                            Harry
+                        </textPath>
+                    </text>
+                    <!-- 沿路線移動動畫 -->
+                    <animateMotion id="npcMotionAnim" dur="20s" repeatCount="1" begin="indefinite" fill="freeze">
+                        <mpath href="#npcMotionPath" />
                     </animateMotion>
                 </g>
                 <g id="collegesGroup">
@@ -107,11 +128,140 @@
     </div>
     <button id="fullscreenButton" style="display:none"></button>
     <script>
+
+        class RouteManager {
+            constructor(pathId, options = {}) {
+                this.path = document.getElementById(pathId);
+                this.svg = document.getElementById("svgCanvas");
+
+                this.currentPosition = 0;
+                this.isLeftFoot = true;
+                this.footOffset = options.footOffset || 10;
+                this.interval = null;
+                this.loop = options.loop ?? true;
+                this.speed = options.speed || 400; // ms
+                this.ribbonGroup = document.getElementById(options.ribbonGroup) || null;
+                this.motionAnim = document.getElementById(options.motionAnim) || null;
+                this.onComplete = options.onComplete || null;
+            }
+
+            createFootprint(x, y, isLeft, rotation) {
+                let footprint = document.createElementNS("http://www.w3.org/2000/svg", "image");
+                footprint.setAttribute("href", isLeft ? "img/left-footprint.png" : "img/right-footprint.png");
+                footprint.setAttribute("x", x);
+                footprint.setAttribute("y", y);
+                footprint.setAttribute("width", 25);
+                footprint.setAttribute("height", 25);
+                footprint.setAttribute("opacity", 1);
+                footprint.setAttribute("class", "footprint");
+                footprint.setAttribute("transform", `rotate(${rotation}, ${x + 12.5}, ${y + 12.5})`);
+
+                this.svg.appendChild(footprint);
+
+                // 淡出 & 移除
+                setTimeout(() => {
+                    footprint.style.transition = "opacity 1s";
+                    footprint.style.opacity = 0;
+                    setTimeout(() => {
+                        if (this.svg.contains(footprint)) this.svg.removeChild(footprint);
+                    }, 1000);
+                }, 2300);
+            }
+
+            updateFootprints() {
+                if (!this.pathLength || this.pathLength <= 0) return;
+
+                const safePos = Math.min(this.currentPosition, this.pathLength);
+                const safeNext = Math.min(this.currentPosition + 5, this.pathLength);
+
+                const point = this.path.getPointAtLength(safePos);
+                const nextPoint = this.path.getPointAtLength(safeNext);
+
+                let angle = Math.atan2(nextPoint.y - point.y, nextPoint.x - point.x) * (180 / Math.PI);
+
+                // 平滑角度
+                const furtherPoint = this.path.getPointAtLength(Math.min(this.currentPosition + 20, this.pathLength));
+                let nextAngle = Math.atan2(furtherPoint.y - nextPoint.y, furtherPoint.x - nextPoint.x) * (180 / Math.PI);
+                let angleDifference = nextAngle - angle;
+                if (Math.abs(angleDifference) > 10) {
+                    angle += angleDifference / 2;
+                }
+
+                let offsetX = Math.cos((angle + 90) * Math.PI / 180) * this.footOffset;
+                let offsetY = Math.sin((angle + 90) * Math.PI / 180) * this.footOffset;
+
+                let leftX = point.x - offsetX;
+                let leftY = point.y - offsetY;
+                let rightX = point.x + offsetX;
+                let rightY = point.y + offsetY;
+                let deviation = angle >= 90 ? 5 : 12;
+
+                if (this.isLeftFoot) {
+                    this.createFootprint(leftX - deviation, leftY - deviation, true, angle);
+                } else {
+                    this.createFootprint(rightX - deviation, rightY - deviation, false, angle);
+                }
+
+                this.isLeftFoot = !this.isLeftFoot;
+                this.currentPosition += 25;
+
+                if (this.currentPosition == this.pathLength) {
+                    clearInterval(this.interval);
+                    if (this.loop) {
+                        setTimeout(() => this.startCycle(), 2000);
+                    }
+                    else if (this.onComplete) {
+                        this.onComplete();
+                    }
+                }
+                else if (this.currentPosition > this.pathLength - 25){
+                    this.currentPosition = this.pathLength - 25;
+                }
+
+                
+            }
+
+            startCycle() {
+                this.currentPosition = 0;
+                this.isLeftFoot = true;
+                this.pathLength = this.path.getTotalLength();
+                // ribbon 動畫
+                if (this.motionAnim) {
+                    // 計算 dur（和腳印步調一致）
+                    const steps = Math.max(1, Math.ceil(this.pathLength / 25));
+                    const totalTime = steps * this.speed; // 毫秒
+                    this.motionAnim.setAttribute("dur", (totalTime / 1000) + "s");
+                    this.motionAnim.beginElement();
+                }
+
+                clearInterval(this.interval);
+                this.interval = setInterval(() => this.updateFootprints(), this.speed);
+            }
+        }
+
         const refreshBtn = $('#refreshBtn');
         const refreshBtnText = $('#refreshBtnText');
         const chair = $('#chair');
         const colleges = ["Slytherin", "Hufflepuff", "Gryffindor", "Ravenclaw"];
-        let isLoop = false;
+        const route = document.getElementById('route');
+        const motionPath = document.getElementById('motionPath');
+        const guestRoute = new RouteManager("route", { 
+            loop: false, 
+            speed: 400, 
+            ribbonGroup: "ribbonGroup", 
+            motionAnim: "motionAnim",
+            onComplete: () => {
+                chair.attr("visibility", "");
+                refreshBtn.attr("visibility", "");
+                refreshBtnText.attr("visibility", "");
+            }
+        });
+        const npcRoute = new RouteManager("npc", { 
+            loop: true, 
+            speed: 600, 
+            ribbonGroup: "npcRibbonGroup", 
+            motionAnim: "npcMotionAnim"
+        });
 
         //#region 圖片載入檢核
 
@@ -154,6 +304,8 @@
         //#endregion
 
         $(function () {
+
+
             // 初始化檢查
             checkOrientation();
 
@@ -264,18 +416,19 @@
                     { scrollTop: target },
                     3000, openDoors
                 );
-            }, 500 + 1500);
+            }, 500 + 500);
 
             setTimeout(function () {
                 $('.ribbon').css({
                     "opacity": "1"
                 });
 
-            }, 500 + 1500 + 5000);
+            }, 500 + 500 + 5000);
 
             setTimeout(function () {
-                setInterval(updateFootprints, intervalTime); // 設定間隔，定期更新腳印位置
-            }, 500 + 1500 + 8000);
+                guestRoute.startCycle();
+                npcRoute.startCycle();
+            }, 500 + 500 + 7000);
         }
 
         function openDoors() {
@@ -290,163 +443,6 @@
                 }
             );
         }
-
-        //#region 腳印相關（已修正：同步 ribbon / pause / restart 邏輯）
-        const route = document.getElementById('route');
-        const svg = document.getElementById('svgCanvas');
-        const motionPath = document.getElementById('motionPath');
-        const motionAnim = document.getElementById('motionAnim');
-        const ribbonGroup = document.getElementById("ribbonGroup"); // 取得 ribbon group
-
-        let currentPosition = 0;
-        let isLeftFoot = true;
-        const footOffset = 10; // 腳印與路徑的偏移量
-        const intervalTime = 400; // 每400ms產生一個腳印
-        const disappearTime = 2300; // 腳印多久後開始淡出（毫秒）
-
-        // 新增狀態控制變數
-        let isAnimatingRibbon = false;   // ribbon 是否正在播放
-        let waitingRestart = false;      // 是否在 3 秒等待期
-        let cycleTimeoutId = null;       // ribbon 完成的 timeout id
-        let restartTimeoutId = null;     // 3 秒等待期的 timeout id
-
-        function createFootprint(x, y, isLeft, rotation) {
-            let footprint = document.createElementNS("http://www.w3.org/2000/svg", "image");
-            footprint.setAttribute("href", isLeft ? "img/left-footprint.png" : "img/right-footprint.png");
-            footprint.setAttribute("x", x);
-            footprint.setAttribute("y", y);
-            footprint.setAttribute("width", 25);
-            footprint.setAttribute("height", 25);
-            footprint.setAttribute("opacity", 1);
-            footprint.setAttribute("class", "footprint");
-
-            // 設置旋轉角度（以圖片中心為旋轉點）
-            footprint.setAttribute("transform", `rotate(${rotation}, ${x + 12.5}, ${y + 12.5})`);
-
-            svg.appendChild(footprint);
-
-            // 設定計時器，讓腳印在一段時間後淡出並移除
-            setTimeout(() => {
-                footprint.style.transition = "opacity 1s";
-                footprint.style.opacity = 0;
-                setTimeout(() => {
-                    if (svg.contains(footprint)) svg.removeChild(footprint);
-                }, 1000);
-            }, disappearTime);
-        }
-
-        // 啟動一個新的循環（包含：重置位置、設定 ribbon dur、開始 ribbon，並在 ribbon 結束後進入 3 秒等待）
-        function startCycle() {
-            if (isAnimatingRibbon || waitingRestart) return; // 已在播放或等待中就跳過
-            const pathLength = route.getTotalLength();
-            if (!pathLength || pathLength <= 0) return;
-
-            // 重新顯示 ribbon
-            ribbonGroup.style.display = "block";
-            ribbonGroup.removeAttribute("transform");  // 清掉上次 freeze 停留的 transform
-            // 重置參數
-            currentPosition = 0;
-            isLeftFoot = true;
-
-            // 計算 dur（和腳印步調一致）
-            const steps = Math.max(1, Math.ceil(pathLength / 25));
-            const totalTime = steps * intervalTime; // 毫秒
-            motionAnim.setAttribute("dur", (totalTime / 1000) + "s");
-
-            // 啟動 ribbon
-            isAnimatingRibbon = true;
-            motionAnim.beginElement();
-            //console.log("startCycle: begin ribbon, dur(ms) =", totalTime);
-
-            // 清除舊的 timeout（保險）
-            if (cycleTimeoutId) clearTimeout(cycleTimeoutId);
-            if (restartTimeoutId) clearTimeout(restartTimeoutId);
-
-            // 當 ribbon 演完後，轉為等待狀態（3 秒），再允許下一輪 startCycle()
-            cycleTimeoutId = setTimeout(() => {
-                isAnimatingRibbon = false;
-                waitingRestart = true;
-
-                //console.log("ribbon finished -> waiting 3s before restart");
-
-                chair.attr("visibility", "");
-                // 3 秒後結束等待並自動啟動下一輪
-                restartTimeoutId = setTimeout(() => {
-                    if (isLoop) {
-                        waitingRestart = false;
-                        //console.log("waiting finished -> start next cycle");
-                        startCycle();
-                    }
-                    else {
-                        refreshBtn.attr("visibility", "");
-                        refreshBtnText.attr("visibility", "");
-                    }
-
-                }, 3000);
-
-            }, totalTime + 50); // 加一點 buffer 確保 SMIL 已完成
-        }
-
-        // 每個 interval 呼叫：只在 ribbon 播放時才製造腳印；在等待期中完全跳過
-        function updateFootprints() {
-            const pathLength = route.getTotalLength();
-            if (!pathLength || pathLength <= 0) return;
-
-            // 如果正在等待重啟（3 秒），不做任何事
-            if (waitingRestart) return;
-
-            // 如果 ribbon 尚未啟動（第一次或上一輪結束），啟動一輪，但不在同一 tick 產生腳印（下個 interval 開始）
-            if (!isAnimatingRibbon) {
-                startCycle();
-                return;
-            }
-
-            // 如果在播放中，產生腳印
-            // 防止 getPointAtLength 超過 path 長度
-            const safePos = Math.min(currentPosition, pathLength);
-            const safeNext = Math.min(currentPosition + 5, pathLength);
-
-            const point = route.getPointAtLength(safePos);
-            const nextPoint = route.getPointAtLength(safeNext); // 預測下一步
-
-            let angle = Math.atan2(Math.round(nextPoint.y) - Math.round(point.y),
-                Math.round(nextPoint.x) - Math.round(point.x))
-                * (180 / Math.PI);
-
-            // 偵測轉彎（平滑角度）
-            const furtherPoint = route.getPointAtLength(Math.min(currentPosition + 20, pathLength));
-            let nextAngle = Math.atan2(Math.round(furtherPoint.y) - Math.round(nextPoint.y),
-                Math.round(furtherPoint.x) - Math.round(nextPoint.x))
-                * (180 / Math.PI);
-            let angleDifference = nextAngle - angle;
-            if (Math.abs(angleDifference) > 10) {
-                angle += angleDifference / 2;
-            }
-
-            let offsetX = Math.cos((angle + 90) * Math.PI / 180) * footOffset;
-            let offsetY = Math.sin((angle + 90) * Math.PI / 180) * footOffset;
-
-            let leftX = point.x - offsetX;
-            let leftY = point.y - offsetY;
-            let rightX = point.x + offsetX;
-            let rightY = point.y + offsetY;
-            let deviation = angle >= 90 ? 5 : 12;
-
-            if (isLeftFoot) {
-                createFootprint(leftX - deviation, leftY - deviation, true, angle);
-            } else {
-                createFootprint(rightX - deviation, rightY - deviation, false, angle);
-            }
-
-            isLeftFoot = !isLeftFoot;
-            currentPosition += 25;
-
-            // 到尾端時，把位置 cap 在 pathLength，下一次會由 startCycle 的 timeout 轉入 waitingRestart
-            if (currentPosition > pathLength - 24) {
-                currentPosition = pathLength - 24;
-            }
-        }
-        //#endregion
 
         // 取得 URL 參數
         function getSeatIdFromURL() {
@@ -483,7 +479,7 @@
         }
 
         function calTargetY(tableNo, seatNo) {
-            let result = 375; //1桌1、2位置高度
+            let result = 375; //1桌 1、2位置高度
 
             //計算位置間距
             if (seatNo >= 5) {
