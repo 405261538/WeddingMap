@@ -9,6 +9,7 @@
     <link rel="preload" as="image" href="https://i.meee.com.tw/pFhTRSj.png">
     <link rel="stylesheet" href="styles.css">
     <script src="guests.js"></script>
+    <script src="npcList.js"></script>
 </head>
 
 <body>
@@ -30,57 +31,79 @@
             </div>
             <svg id="svgCanvas" viewBox="0 0 1920 2307" class="fullscreen-background"
                 preserveAspectRatio="xMidYMid meet">
-
                 <!-- 背景圖片 -->
                 <image href="https://i.meee.com.tw/dZiudH2.jpg" class="background" x="0" y="0" width="1920"
                     height="2307" />
+                <g id="footprintArea"></g>
 
-                <defs>
-                    <!-- 路線 -->
+                <g id="refreshBtnGroup">
+                    <!-- 按鈕底 -->
+                    <rect id="refreshBtn" x="900" y="50" rx="12" ry="12" width="120" height="50" fill="#5C3426"
+                        stroke="#5C3426" stroke-width="3" cursor="pointer" filter="url(#shadow)" visibility="hidden" />
+
+                    <!-- 按鈕文字 -->
+                    <text id="refreshBtnText" x="960" y="80" text-anchor="middle" alignment-baseline="middle"
+                        fill="#FFEDDD" font-size="16" font-weight="bold" pointer-events="none" visibility="hidden">
+                        再看一次
+                    </text>
+
+                    <!-- 陰影效果 -->
+                    <defs>
+                        <filter id="shadow" x="-20%" y="-20%" width="150%" height="150%">
+                            <feDropShadow dx="2" dy="2" stdDeviation="3" flood-color="rgba(0,0,0,0.4)" />
+                        </filter>
+                    </defs>
+                </g>
+
+                <!-- npc路線 -->
+                <g id="npcGroup">
+                    <path id="npc" fill="transparent" stroke="blue" stroke-width="2" d="" visibility="hidden" />
+                    <defs>
+                        <path id="npcArcPathDown" d="" fill="transparent" />
+                        <path id="npcMotionPath" fill="transparent" d="" />
+                    </defs>
+                    <g id="npcRibbonGroup">
+                        <!-- 前景圖片 -->
+                        <image id="npcRibbon" href="https://i.meee.com.tw/5VqdeNQ.png" x="0" y="1925" width="200"
+                            height="100" />
+                        <!-- 文字沿向下弧形排列 -->
+                        <text font-size="26" font-weight="bold" fill="#5C3426">
+                            <textPath id="npcName" href="#npcArcPathDown" startOffset="50%" text-anchor="middle">
+                            </textPath>
+                        </text>
+                        <!-- 沿路線移動動畫 -->
+                        <animateMotion id="npcMotionAnim" dur="20s" repeatCount="1" begin="indefinite" fill="freeze">
+                            <mpath href="#npcMotionPath" />
+                        </animateMotion>
+                    </g>
+                </g>
+
+                <!-- guest路線 -->
+                <g id="guestGroup">
                     <path id="route" fill="transparent" stroke="black" stroke-width="2" d="" visibility="hidden" />
-                    <!--定義向下的弧形路徑 從左到右，弧形向下 -->
-                    <path id="arcPathDown" d="M840,1967 A300,400 0 0,0 1080,1967" fill="transparent" />
-                    <path id="motionPath" fill="transparent" stroke="black" stroke-width="2" d="" visibility="hidden" />
-                </defs>
-                <g id="ribbonGroup">
-                    <!-- 前景圖片 -->
-                    <image href="https://i.meee.com.tw/5VqdeNQ.png" class="ribbon" x="860" y="1925" width="200"
-                        height="100" />
+                    <defs>
+                        <!--定義向下的弧形路徑 從左到右，弧形向下 -->
+                        <path id="arcPathDown" d="M840,1967 A300,400 0 0,0 1080,1967" fill="transparent" />
+                        <path id="motionPath" fill="transparent" d="" />
+                    </defs>
+                    <g id="ribbonGroup">
+                        <!-- 前景圖片 -->
+                        <image href="https://i.meee.com.tw/5VqdeNQ.png" class="ribbon" x="860" y="1925" width="200"
+                            height="100" />
 
-                    <!-- 文字沿向下弧形排列 -->
-                    <text font-size="26" font-weight="bold" fill="#5C3426">
-                        <textPath id="guestName" href="#arcPathDown" class="ribbon" startOffset="50%"
-                            text-anchor="middle">
-                        </textPath>
-                    </text>
-                    <!-- 沿路線移動動畫 -->
-                    <animateMotion id="motionAnim" dur="20s" repeatCount="1" begin="indefinite" fill="freeze">
-                        <mpath href="#motionPath" />
-                    </animateMotion>
+                        <!-- 文字沿向下弧形排列 -->
+                        <text font-size="26" font-weight="bold" fill="#5C3426">
+                            <textPath id="guestName" href="#arcPathDown" class="ribbon" startOffset="50%"
+                                text-anchor="middle">
+                            </textPath>
+                        </text>
+                        <!-- 沿路線移動動畫 -->
+                        <animateMotion id="motionAnim" dur="20s" repeatCount="1" begin="indefinite" fill="freeze">
+                            <mpath href="#motionPath" />
+                        </animateMotion>
+                    </g>
                 </g>
-                <defs>
-                    <!-- 路線 -->
-                    <path id="npc" fill="transparent" stroke="blue" stroke-width="2" d="M100,2100 L100,500" visibility="hidden" />
-                    <path id="npcArcPathDown" d="M120,1967 A300,400 0 0,0 460,1967" fill="transparent" />
-                    <path id="npcMotionPath" fill="transparent" stroke="black" stroke-width="2" d="M0 0 L0 -1600" 
-                        visibility="hidden" />
-                </defs>
-                <g id="npcRibbonGroup">
-                    <!-- 前景圖片 -->
-                    <image href="https://i.meee.com.tw/5VqdeNQ.png" x="100" y="1925" width="200"
-                        height="100" />
 
-                    <!-- 文字沿向下弧形排列 -->
-                    <text font-size="26" font-weight="bold" fill="#5C3426">
-                        <textPath id="npcName" href="#npcArcPathDown" startOffset="50%" text-anchor="middle">
-                            Harry
-                        </textPath>
-                    </text>
-                    <!-- 沿路線移動動畫 -->
-                    <animateMotion id="npcMotionAnim" dur="20s" repeatCount="1" begin="indefinite" fill="freeze">
-                        <mpath href="#npcMotionPath" />
-                    </animateMotion>
-                </g>
                 <g id="collegesGroup">
                     <image id="Slytherin" class="colleges" href="https://i.meee.com.tw/z6jyuTN.png" x="180" y="90"
                         width="300" height="200" opacity="0" />
@@ -91,6 +114,7 @@
                     <image id="Ravenclaw" class="colleges" href="https://i.meee.com.tw/zmxSXuE.png" x="1440" y="90"
                         width="300" height="200" opacity="0" />
                 </g>
+
                 <g id="doorsGroup">
                     <g id="door-left-group" transform="rotate(0, 730, 2149)">
                         <image id="door-left" href="https://i.meee.com.tw/EhK8iZB.png" x="730" y="2149" width="227"
@@ -101,22 +125,6 @@
                             height="17" preserveAspectRatio="none" />
                     </g>
                 </g>
-                <!-- 按鈕底 -->
-                <rect id="refreshBtn" x="900" y="50" rx="12" ry="12" width="120" height="50" fill="#5C3426"
-                    stroke="#5C3426" stroke-width="3" cursor="pointer" filter="url(#shadow)" visibility="hidden" />
-
-                <!-- 按鈕文字 -->
-                <text id="refreshBtnText" x="960" y="80" text-anchor="middle" alignment-baseline="middle" fill="#FFEDDD"
-                    font-size="16" font-weight="bold" pointer-events="none" visibility="hidden">
-                    再看一次
-                </text>
-
-                <!-- 陰影效果 -->
-                <defs>
-                    <filter id="shadow" x="-20%" y="-20%" width="150%" height="150%">
-                        <feDropShadow dx="2" dy="2" stdDeviation="3" flood-color="rgba(0,0,0,0.4)" />
-                    </filter>
-                </defs>
                 <image id="chair" href="https://i.meee.com.tw/rV2UGjU.png" x="730" y="1500" width="60" height="60"
                     preserveAspectRatio="none" visibility="hidden" />
             </svg>
@@ -132,8 +140,7 @@
         class RouteManager {
             constructor(pathId, options = {}) {
                 this.path = document.getElementById(pathId);
-                this.svg = document.getElementById("svgCanvas");
-
+                this.footprintArea = document.getElementById("footprintArea");
                 this.currentPosition = 0;
                 this.isLeftFoot = true;
                 this.footOffset = options.footOffset || 10;
@@ -156,14 +163,14 @@
                 footprint.setAttribute("class", "footprint");
                 footprint.setAttribute("transform", `rotate(${rotation}, ${x + 12.5}, ${y + 12.5})`);
 
-                this.svg.appendChild(footprint);
+                this.footprintArea.appendChild(footprint);
 
                 // 淡出 & 移除
                 setTimeout(() => {
                     footprint.style.transition = "opacity 1s";
                     footprint.style.opacity = 0;
                     setTimeout(() => {
-                        if (this.svg.contains(footprint)) this.svg.removeChild(footprint);
+                        if (this.footprintArea.contains(footprint)) this.footprintArea.removeChild(footprint);
                     }, 1000);
                 }, 2300);
             }
@@ -177,12 +184,15 @@
                 const point = this.path.getPointAtLength(safePos);
                 const nextPoint = this.path.getPointAtLength(safeNext);
 
-                let angle = Math.atan2(nextPoint.y - point.y, nextPoint.x - point.x) * (180 / Math.PI);
-
+                let angle = Math.atan2(Math.round(nextPoint.y) - Math.round(point.y), 
+                    Math.round(nextPoint.x) - Math.round(point.x)) * (180 / Math.PI);
+                
                 // 平滑角度
                 const furtherPoint = this.path.getPointAtLength(Math.min(this.currentPosition + 20, this.pathLength));
-                let nextAngle = Math.atan2(furtherPoint.y - nextPoint.y, furtherPoint.x - nextPoint.x) * (180 / Math.PI);
+                let nextAngle = Math.atan2(Math.round(furtherPoint.y) - Math.round(nextPoint.y), 
+                    Math.round(furtherPoint.x) - Math.round(nextPoint.x)) * (180 / Math.PI);
                 let angleDifference = nextAngle - angle;
+
                 if (Math.abs(angleDifference) > 10) {
                     angle += angleDifference / 2;
                 }
@@ -208,17 +218,17 @@
                 if (this.currentPosition == this.pathLength) {
                     clearInterval(this.interval);
                     if (this.loop) {
-                        setTimeout(() => this.startCycle(), 2000);
+                        setTimeout(() => this.startCycle(), 3000);
                     }
                     else if (this.onComplete) {
                         this.onComplete();
                     }
                 }
-                else if (this.currentPosition > this.pathLength - 25){
+                else if (this.currentPosition > this.pathLength - 25) {
                     this.currentPosition = this.pathLength - 25;
                 }
 
-                
+
             }
 
             startCycle() {
@@ -245,10 +255,10 @@
         const colleges = ["Slytherin", "Hufflepuff", "Gryffindor", "Ravenclaw"];
         const route = document.getElementById('route');
         const motionPath = document.getElementById('motionPath');
-        const guestRoute = new RouteManager("route", { 
-            loop: false, 
-            speed: 400, 
-            ribbonGroup: "ribbonGroup", 
+        const guestRoute = new RouteManager("route", {
+            loop: false,
+            speed: 400,
+            ribbonGroup: "ribbonGroup",
             motionAnim: "motionAnim",
             onComplete: () => {
                 chair.attr("visibility", "");
@@ -256,10 +266,10 @@
                 refreshBtnText.attr("visibility", "");
             }
         });
-        const npcRoute = new RouteManager("npc", { 
-            loop: true, 
-            speed: 600, 
-            ribbonGroup: "npcRibbonGroup", 
+        const npcRoute = new RouteManager("npc", {
+            loop: true,
+            speed: 400,
+            ribbonGroup: "npcRibbonGroup",
             motionAnim: "npcMotionAnim"
         });
 
@@ -305,7 +315,6 @@
 
         $(function () {
 
-
             // 初始化檢查
             checkOrientation();
 
@@ -331,7 +340,7 @@
                 $(".left").animate(
                     { deg: -180 },
                     {
-                        duration: 5000,
+                        duration: 3500,
                         step: function (now) {
                             $(this).css("transform", "rotateY(" + now + "deg)");
                             // $(this).css("opacity", 1 - Math.abs(now) / 180);
@@ -343,12 +352,15 @@
                 $(".right").animate(
                     { deg: 180 },
                     {
-                        duration: 5000,
+                        duration: 3500,
                         step: function (now) {
                             $(this).css("transform", "rotateY(" + now + "deg)");
                             // $(this).css("opacity", 1 - Math.abs(now) / 180);
                         },
-                        complete: openMap
+                        complete: function(){
+                            npcRoute.startCycle();
+                            openMap();
+                        }
                     }
                 );
             });
@@ -427,7 +439,6 @@
 
             setTimeout(function () {
                 guestRoute.startCycle();
-                npcRoute.startCycle();
             }, 500 + 500 + 7000);
         }
 
@@ -461,10 +472,11 @@
 
             $('#guestName').text(guest.name);
 
-            setPath(seatId);
+            setGuest(seatId);
+            setNpc(seatId);
         }
 
-        function setPath(seatId) {
+        function setGuest(seatId) {
             const college = seatId[0];
             const tableNo = parseInt(seatId[1], 10);
             const seatNo = parseInt(seatId[2], 10);
@@ -569,6 +581,32 @@
             if (leftSideSeat) mirrorSVGImage('#chair', true);
         }
 
+        function setNpc(seatId) {
+            let npc = pickRandomNPC();
+            let arcPathX = npc.ribbon.x - 20;
+            let arcPathY = npc.ribbon.y + 42;
+
+            $('#npcName').text(npc.name);
+            $('#npc').attr("d", npc.route);
+            $('#npcMotionPath').attr("d", npc.motionPath);
+            $('#npcRibbon').attr("x", npc.ribbon.x);
+            $('#npcRibbon').attr("y", npc.ribbon.y);
+            $('#npcArcPathDown').attr("d",
+                `M${arcPathX},${arcPathY} A300,400 0 0,0 ${arcPathX + 240},${arcPathY}`);
+        }
+
+        function pickRandomNPC() {
+            const rand = Math.random(); // 0 ~ 1 之間
+            let cumulative = 0;
+
+            for (const npc of npcList) {
+                cumulative += npc.chance;
+                if (rand < cumulative) {
+                    return npc;
+                }
+            }
+            return npcList[0]; // 理論上不會發生，除非 chance 沒加總到 1
+        }
         /**
          * 對 SVG image 做鏡像
          * @param {string} selector - jQuery 選擇器，例如 '#chair'
