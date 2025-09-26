@@ -71,10 +71,11 @@
             padding: 8px 12px;
             margin: 20px;
             cursor: pointer;
-            background: #FFEDDD;
+            background: #8080803d;
             border-radius: 8px;
             color: #5C3426;
             border: none;
+            display: none;
         }
 
         /* 列印區塊 */
@@ -165,6 +166,13 @@
                 if (!val) {
                     $("#guestTable tbody").html('');
                     return;
+                }
+
+                if(val == "print"){
+                    $("#printBtn").show();
+                }
+                else{
+                    $("#printBtn").hide();
                 }
 
                 setGuestsGrid(filtered);
