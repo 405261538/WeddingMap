@@ -35,7 +35,7 @@ image {
     /* 高度依比例 */
     transform: scale(2);
     opacity: 0;
-    transition: transform 5s ease, opacity 5s ease;
+    transition: transform 4s ease, opacity 4s ease;
     z-index: 1;
     position: relative;
     /* 讓它隨容器滾動 */
