@@ -54,26 +54,11 @@
             position: relative;
             display: flex;
             flex-direction: column;
-            /* 由上到下排列 */
             align-items: center;
-            /* 水平置中 */
-        }
-
-        .lightbox-content h3 {
-            margin-bottom: 20px;
-        }
-
-        .close-btn {
-            position: absolute;
-            top: 8px;
-            right: 12px;
-            font-size: 20px;
-            cursor: pointer;
         }
 
         #qrcode {
             margin: 0 auto;
-            /* 水平置中 */
         }
 
         #guestDropdown {
@@ -81,18 +66,72 @@
             padding: 8px;
             margin: 20px;
         }
+
+        #printBtn {
+            padding: 8px 12px;
+            margin: 20px;
+            cursor: pointer;
+            background: #FFEDDD;
+            border-radius: 8px;
+            color: #5C3426;
+            border: none;
+        }
+
+        /* 列印區塊 */
+        #printArea {
+            display: none;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .print-grid {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .print-item {
+            width: 30%;
+            margin: 10px;
+            text-align: center;
+            page-break-inside: avoid;
+        }
+
+        .print-item h4 {
+            margin-bottom: 10px;
+        }
+
+        /* 列印專用樣式 */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+
+            #printArea,
+            #printArea * {
+                visibility: visible;
+            }
+
+            #printArea {
+                display: block;
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+            }
+        }
     </style>
 </head>
 
 <body>
     <h2 style="text-align:center;">Guests</h2>
-    <div style="display: flex; justify-content: center;">
+    <div style="display: flex; justify-content: center; align-items: center;">
         <input type="text" id="guestDropdown" placeholder="輸入姓名搜尋">
+        <button id="printBtn">print</button>
     </div>
 
     <table id="guestTable">
-        <thead>
-        </thead>
+        <thead></thead>
         <tbody>
             <!-- 動態載入 -->
         </tbody>
@@ -100,16 +139,18 @@
 
     <div class="lightbox" id="lightbox">
         <div class="lightbox-content">
-            <!-- <span class="close-btn" id="closeBtn">&times;</span> -->
-            <h3 id="guestName"></h3>
+            <h3 id="guestName" style="color:#5C3426;"></h3>
             <div id="qrcode"></div>
         </div>
     </div>
 
-    <script>
-        // 載入 guests.json
-        $(function () {
+    <!-- 列印專用區塊 -->
+    <div id="printArea">
+        <div class="print-grid" id="printGrid"></div>
+    </div>
 
+    <script>
+        $(function () {
             // 關閉燈箱
             $("#closeBtn, #lightbox").on("click", function (e) {
                 if (e.target.id === "lightbox" || e.target.id === "closeBtn") {
@@ -129,46 +170,63 @@
                 setGuestsGrid(filtered);
             });
 
+            // 列印按鈕
+            $("#printBtn").on("click", function () {
+                generatePrintArea();
+                window.print();
+            });
         });
 
-
-        // 產生 QRCode 並顯示燈箱
+        // 單一 Guest QRCode
         function generateQR(guest) {
             let url = `https://405261538.github.io/WeddingMap/map.html?id=${guest.id}`;
-            console.log(url);
             $("#guestName").text(guest.name);
             $("#qrcode").html("");
             new QRCode(document.getElementById("qrcode"), {
                 text: url,
-                colorDark: "#5C3426",   // 深藍色
-                colorLight: "#FFEDDD"   // 白色背景
+                colorDark: "#5C3426",
+                colorLight: "#FFEDDD"
             });
             $("#lightbox").css("display", "flex");
         }
-        function setGuestsGrid(data){
-            let tbody = $("#guestTable tbody");
-            let row; // 暫存一列
 
+        // 搜尋表格
+        function setGuestsGrid(data) {
+            let tbody = $("#guestTable tbody");
+            let row;
             tbody.html('');
             data.forEach((guest, index) => {
-                // 每 3 個開始新的一列
                 if (index % 3 === 0) {
                     row = $("<tr>");
                 }
-
                 let cell = $("<td>").text(guest.name);
-
-                // 點擊事件
                 cell.on("click", function () {
                     generateQR(guest);
                 });
-
                 row.append(cell);
-
-                // 如果到第 3 個或最後一筆，就 append row
                 if (index % 3 === 2 || index === data.length - 1) {
                     tbody.append(row);
                 }
+            });
+        }
+
+        // 列印區塊產生全部 guests
+        function generatePrintArea() {
+            let grid = $("#printGrid");
+            grid.html(""); // 清空
+            guests.forEach(guest => {
+                let item = $("<div class='print-item'>");
+                item.append(`<h4 style="color:#5C3426;">${guest.name}</h4>`);
+                let qrDiv = $("<div>");
+                new QRCode(qrDiv[0], {
+                    text: `https://405261538.github.io/WeddingMap/map.html?id=${guest.id}`,
+                    width: 128,
+                    height: 128,
+                    colorDark: "#5C3426",
+                    colorLight: "#FFEDDD"
+                });
+                item.append(qrDiv);
+                grid.append(item);
             });
         }
     </script>
