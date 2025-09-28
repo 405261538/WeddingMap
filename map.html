@@ -34,6 +34,8 @@
                 <!-- 背景圖片 -->
                 <image href="https://i.meee.com.tw/9LKkhVH.jpg" class="background" x="0" y="0" width="1920"
                     height="2307" />
+                <image id="chair" href="https://i.meee.com.tw/rV2UGjU.png" x="730" y="1500" width="60" height="60"
+                    preserveAspectRatio="none" visibility="hidden" />
                 <g id="footprintArea"></g>
 
                 <g id="refreshBtnGroup">
@@ -111,8 +113,7 @@
                             height="17" preserveAspectRatio="none" />
                     </g>
                 </g>
-                <image id="chair" href="https://i.meee.com.tw/rV2UGjU.png" x="730" y="1500" width="60" height="60"
-                    preserveAspectRatio="none" visibility="hidden" />
+
             </svg>
 
             <div class="line-vertical"></div>
@@ -247,7 +248,9 @@
             motionAnim: "motionAnim",
             onComplete: () => {
                 chair.attr("visibility", "");
-                refreshBtn.attr("visibility", "");
+                setTimeout(function(){
+                    refreshBtn.attr("visibility", "");
+                }, 4000);
             }
         });
         const npcRoute = new RouteManager("npc", {
@@ -457,7 +460,7 @@
             $('#guestName').text(guest.name);
 
             setGuest(seatId);
-            setNpc(seatId);
+            setNpc(guest);
         }
 
         function setGuest(seatId) {
@@ -564,8 +567,16 @@
             if (leftSideSeat) mirrorSVGImage('#chair', true);
         }
 
-        function setNpc(seatId) {
-            let npc = pickRandomNPC();
+        function setNpc(guest) {
+            let npc;
+
+            if(guest.specNpc){
+                npc = npcList.find(x => x.name == guest.specNpc);
+            }
+            else{
+                npc = pickRandomNPC();
+            }
+
             let arcPathX = npc.ribbon.x - 20;
             let arcPathY = npc.ribbon.y + 42;
 
