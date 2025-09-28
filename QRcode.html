@@ -160,7 +160,7 @@
             });
 
             $("#guestDropdown").on("input", function () {
-                let val = $(this).val().toLowerCase();
+                let val = $(this).val();
                 let filtered = guests.filter(g => g.name.includes(val));
 
                 if (!val) {
