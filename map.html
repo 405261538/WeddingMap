@@ -40,7 +40,7 @@
 
                 <g id="refreshBtnGroup">
                     <image id="refreshBtn" href="https://i.meee.com.tw/Yjq634k.png" x="860" y="1925" width="200"
-                            height="100" visibility="hidden"/>
+                        height="100" visibility="hidden" />
                 </g>
 
                 <!-- npc路線 -->
@@ -102,7 +102,40 @@
                     <image id="Ravenclaw" class="colleges" href="https://i.meee.com.tw/zmxSXuE.png" x="1440" y="210"
                         width="300" height="200" opacity="0" />
                 </g>
+                <g>
+                    <!-- 第一個 Z -->
+                    <text x="360" y="450" font-size="20" fill="#5C3426" text-anchor="middle" opacity="0">
+                        Z
+                        <animateTransform id="anim1-move" attributeName="transform" type="translate" from="0,0"
+                            to="0,-150" dur="3s" repeatCount="indefinite" begin="indefinite" />
+                        <animate id="anim1-size" attributeName="font-size" from="20" to="40" dur="3s"
+                            repeatCount="indefinite" begin="indefinite" />
+                        <animate id="anim1-opacity" attributeName="opacity" values="0;1;0" dur="3s"
+                            repeatCount="indefinite" begin="indefinite" />
+                    </text>
 
+                    <!-- 第二個 Z -->
+                    <text x="360" y="450" font-size="20" fill="#5C3426" text-anchor="middle" opacity="0">
+                        Z
+                        <animateTransform id="anim2-move" attributeName="transform" type="translate" from="0,0"
+                            to="0,-150" dur="3s" repeatCount="indefinite" begin="indefinite" />
+                        <animate id="anim2-size" attributeName="font-size" from="20" to="40" dur="3s"
+                            repeatCount="indefinite" begin="indefinite" />
+                        <animate id="anim2-opacity" attributeName="opacity" values="0;1;0" dur="3s"
+                            repeatCount="indefinite" begin="indefinite" />
+                    </text>
+
+                    <!-- 第三個 Z -->
+                    <text x="360" y="450" font-size="20" fill="#5C3426" text-anchor="middle" opacity="0">
+                        Z
+                        <animateTransform id="anim3-move" attributeName="transform" type="translate" from="0,0"
+                            to="0,-150" dur="3s" repeatCount="indefinite" begin="indefinite" />
+                        <animate id="anim3-size" attributeName="font-size" from="20" to="40" dur="3s"
+                            repeatCount="indefinite" begin="indefinite" />
+                        <animate id="anim3-opacity" attributeName="opacity" values="0;1;0" dur="3s"
+                            repeatCount="indefinite" begin="indefinite" />
+                    </text>
+                </g>
                 <g id="doorsGroup">
                     <g id="door-left-group" transform="rotate(0, 730, 2149)">
                         <image id="door-left" href="https://i.meee.com.tw/EhK8iZB.png" x="730" y="2149" width="227"
@@ -171,12 +204,12 @@
                 const point = this.path.getPointAtLength(safePos);
                 const nextPoint = this.path.getPointAtLength(safeNext);
 
-                let angle = Math.atan2(Math.round(nextPoint.y) - Math.round(point.y), 
+                let angle = Math.atan2(Math.round(nextPoint.y) - Math.round(point.y),
                     Math.round(nextPoint.x) - Math.round(point.x)) * (180 / Math.PI);
-                
+
                 // 平滑角度
                 const furtherPoint = this.path.getPointAtLength(Math.min(this.currentPosition + 20, this.pathLength));
-                let nextAngle = Math.atan2(Math.round(furtherPoint.y) - Math.round(nextPoint.y), 
+                let nextAngle = Math.atan2(Math.round(furtherPoint.y) - Math.round(nextPoint.y),
                     Math.round(furtherPoint.x) - Math.round(nextPoint.x)) * (180 / Math.PI);
                 let angleDifference = nextAngle - angle;
 
@@ -248,7 +281,7 @@
             motionAnim: "motionAnim",
             onComplete: () => {
                 chair.attr("visibility", "");
-                setTimeout(function(){
+                setTimeout(function () {
                     refreshBtn.attr("visibility", "");
                 }, 4000);
             }
@@ -344,7 +377,7 @@
                             $(this).css("transform", "rotateY(" + now + "deg)");
                             // $(this).css("opacity", 1 - Math.abs(now) / 180);
                         },
-                        complete: function(){
+                        complete: function () {
                             npcRoute.startCycle();
                             openMap();
                         }
@@ -570,10 +603,16 @@
         function setNpc(guest) {
             let npc;
 
-            if(guest.specNpc){
+            if (guest.specNpc) {
                 npc = npcList.find(x => x.name == guest.specNpc);
+                if(npc.name == "Jira"){
+                    npcRoute.loop = false;
+                    npcRoute.onComplete = () => {
+                        setTimeout(() => startZzz(), 3000);
+                    }
+                }
             }
-            else{
+            else {
                 npc = pickRandomNPC();
             }
 
@@ -671,6 +710,26 @@
             document.documentElement.style.setProperty('--vh', `${vh}px`);
         }
 
+        function startZzz() {
+            // 依序延遲播放 (0s, 1s, 2s)
+            setTimeout(() => {
+                document.getElementById("anim1-move").beginElement();
+                document.getElementById("anim1-size").beginElement();
+                document.getElementById("anim1-opacity").beginElement();
+            }, 0);
+
+            setTimeout(() => {
+                document.getElementById("anim2-move").beginElement();
+                document.getElementById("anim2-size").beginElement();
+                document.getElementById("anim2-opacity").beginElement();
+            }, 1000);
+
+            setTimeout(() => {
+                document.getElementById("anim3-move").beginElement();
+                document.getElementById("anim3-size").beginElement();
+                document.getElementById("anim3-opacity").beginElement();
+            }, 2000);
+        }
     </script>
 
 </body>
