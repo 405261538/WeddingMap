@@ -136,7 +136,10 @@
                             height="17" preserveAspectRatio="none" />
                     </g>
                 </g>
-
+                <g id="signature">
+                    <image id="Dolores" href="https://i.meee.com.tw/LIDiEPy.png" x="1060" y="100"
+                        width="130" height="130" opacity="0" />
+                </g>
             </svg>
 
             <div class="line-vertical"></div>
@@ -493,8 +496,28 @@
 
             $('#guestName').text(guest.name);
 
-            setGuest(seatId);
+            if(seatId == "SHGR"){
+                setSpecGuest();
+            }
+            else{
+                setGuest(seatId);
+            }
+
             setNpc(guest);
+        }
+
+        function setSpecGuest(){
+            route.setAttribute("d", "M960 2060 L1405 2060 L1405 150 L1185 80");
+            motionPath.setAttribute("d", "M0 0 L445 0 L445 -1860 L165 -1930");
+            guestRoute.onComplete = () => {
+                setTimeout(() => {
+                    $('#Dolores').animate({ opacity: 1 }, 2000);
+                }, 2000);
+                setTimeout(function () {
+                    refreshBtn.attr("y", calTargetY(1, 1) - 85);
+                    refreshBtn.attr("visibility", "");
+                }, 4000);
+            }
         }
 
         function setGuest(seatId) {

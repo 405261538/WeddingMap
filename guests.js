@@ -142,5 +142,6 @@ let guests = [
   { "id": "R63", "name": "AMY" },
   { "id": "R64", "name": "王晴瑜" },
   { "id": "R65", "name": "封庭婕" },
-  { "id": "R66", "name": "蝴蝶" }
+  { "id": "R66", "name": "蝴蝶" },
+  { "id": "SHGR", "name": "劉詩潔"},
 ]
